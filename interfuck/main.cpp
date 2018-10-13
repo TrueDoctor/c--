@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <cstddef>
 #include <iostream>
 #include <vector>
 #include <stack>
@@ -14,16 +13,16 @@ enum class JumpCondition { not_zero, zero };
 
 struct BfOpCode {
 	enum BfOpCodeType {
-		_inc, _dec, _rt, _lt, _set, _inp, _out, _jmp,
+		_nop, _inc, _dec, _rt, _lt, _set, _inp, _out, _jmp, _load, _store,
 	} type;
 	union {
 		struct { bfcell cell1; };
 		struct { JumpCondition jmp_cond; uint32_t jmp_index; };
 	};
 	BfOpCode() {  }
-	BfOpCode(BfOpCodeType type) : type(type) {  }
-	BfOpCode(BfOpCodeType type, bfcell cell) : type(type), cell1(cell) {  }
-	BfOpCode(BfOpCodeType type, JumpCondition cond, uint32_t index) : type(type), jmp_cond(cond), jmp_index(index) {  }
+	BfOpCode(BfOpCodeType type) : type(type) {  }  // inp, out, store
+	BfOpCode(BfOpCodeType type, bfcell cell) : type(type), cell1(cell) {  }  // inc, dec, rt, lt, set
+	BfOpCode(BfOpCodeType type, JumpCondition cond, uint32_t index) : type(type), jmp_cond(cond), jmp_index(index) {  }  // jmp
 };
 
 struct BfTransducer {
@@ -37,7 +36,7 @@ struct BfTransducer {
 		uint32_t top;
 		if (len > 2) {
 			for (uint32_t i = 2; i < len; i++) {
-				if (data[i] == ']' && data[i - 1] == '-' && data[i - 2] == '[') {
+				if (data[i] == ']' && (data[i - 1] == '-' || data[i - 1] == '+') && data[i - 2] == '[') {
 					data[i] = ' ';
 					data[i - 1] = '*';
 					data[i - 2] = ' ';
@@ -72,6 +71,30 @@ struct BfTransducer {
 			case '*': push(BfOpCode(BfOpCode::_set, 0)); break;
 			case '.': push(BfOpCode(BfOpCode::_out)); break;
 			case ',': push(BfOpCode(BfOpCode::_inp)); break;
+			}
+		}
+		return 0;
+	}
+	int optimize() {
+		uint32_t startindex;
+		bool in_loop = false;
+		int64_t shifts = 0;
+		for (uint32_t i = 0; i < len; i++) {
+			auto c = code[i];
+			if (c.type == BfOpCode::_jmp && c.jmp_cond == JumpCondition::zero) {
+				in_loop = true;
+				startindex = i;
+				shifts = 0;
+			}
+			if (in_loop) {
+				if (c.type == BfOpCode::_inp || c.type == BfOpCode::_out) {
+					in_loop = false;
+				}
+				if (c.type == BfOpCode::_lt) shifts -= c.cell1;
+				else if (c.type == BfOpCode::_rt) shifts += c.cell1;
+				if (c.type == BfOpCode::_jmp && c.jmp_cond == JumpCondition::not_zero) {
+					// sachen machen
+				}
 			}
 		}
 		return 0;
@@ -124,6 +147,10 @@ int main(int argc, char **argv) {
 		BfTransducer duc(raw);
 		if (duc.transduce()) {
 			puts("error: error in bf file");
+			return -1;
+		}
+		if (duc.optimize()) {
+			puts("error: error while optimizing bf file");
 			return -1;
 		}
 		BfVirtualEnv env(duc.code);
