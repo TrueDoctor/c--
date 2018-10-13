@@ -2,14 +2,13 @@
 #include <cstddef>
 #include <iostream>
 #include <vector>
-#include <utility>
 #include <stack>
 #include <thread>
 #include <chrono>
 
 using namespace std;
 using bfcell = uint32_t;
-using byte = unsigned char;
+//using byte = unsigned char;
 
 enum class JumpCondition { not_zero, zero };
 
@@ -48,17 +47,17 @@ struct BfTransducer {
 			}
 			switch (c) {
 			case '[':
-				code.push_back(BfOpCode(BfOpCode::_jmp, JumpCondition::zero, UINT32_MAX));
+				code.emplace_back(BfOpCode::_jmp, JumpCondition::zero, UINT32_MAX);
 				indices.push((uint32_t)code.size());
 				break;
 			case ']':
-				if (!indices.size()) {
+				if (indices.empty()) {
 					puts("error: unassigned closure");
 					return -1;
 				}
 				top = indices.top();
 				indices.pop();
-				code.push_back(BfOpCode(BfOpCode::_jmp, JumpCondition::not_zero, top));
+				code.emplace_back(BfOpCode::_jmp, JumpCondition::not_zero, top);
 				code[top - 1].jmp_index = (uint32_t)code.size();
 				break;
 			case '.': push(BfOpCode(BfOpCode::_out)); break;
@@ -72,12 +71,12 @@ struct BfTransducer {
 struct BfVirtualEnv {
 	BfOpCode *code; uint32_t len;
 	BfVirtualEnv(vector<BfOpCode> &code) : code(code.data()), len((uint32_t)code.size()) {  }
-	int run() {
+	int run() const {
 		uint32_t memory[4096];
 		memset(memory, 0, sizeof(memory));
 		uint32_t *cell = memory;
 		for (uint32_t i = 0; i < len; i++) {
-			BfOpCode c = code[i];
+			const BfOpCode c = code[i];
 			switch (c.type) {
 			case BfOpCode::_inc: *cell += c.cell1; break;
 			case BfOpCode::_dec: *cell -= c.cell1; break;
@@ -117,13 +116,12 @@ int main(int argc, char **argv) {
 			return -1;
 		}
 		BfVirtualEnv env(duc.code);
-		chrono::high_resolution_clock myclock;
-		auto t0 = myclock.now();
+		const auto t0 = chrono::high_resolution_clock::now();
 		if (env.run()) {
 			puts("error: error while executing code in the virtual env");
 			return -1;
 		}
-		auto dt = myclock.now() - t0;
+		const auto dt = chrono::high_resolution_clock::now() - t0;
 		puts("\n---------------");
 		printf("execution time: %llims", chrono::duration_cast<chrono::milliseconds>(dt).count());
 	}
