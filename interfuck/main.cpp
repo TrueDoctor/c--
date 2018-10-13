@@ -8,7 +8,7 @@
 
 using namespace std;
 using bfcell = uint32_t;
-//using byte = unsigned char;
+using u8 = unsigned char;
 
 enum class JumpCondition { not_zero, zero };
 
@@ -27,15 +27,24 @@ struct BfOpCode {
 };
 
 struct BfTransducer {
-	byte *data; uint32_t len;
+	u8 *data; uint32_t len;
 	vector<BfOpCode> code;
-	BfTransducer(vector<byte> &raw) : data(raw.data()), len((uint32_t)raw.size()) {  }
+	BfTransducer(vector<u8> &raw) : data(raw.data()), len((uint32_t)raw.size()) {  }
 	void push(BfOpCode c) { code.push_back(c); }
 	int transduce() {
 		int64_t incr = 0, shift = 0;
 		stack<uint32_t> indices;
 		uint32_t top;
-		for (char *pos = (char*)data; (byte*)pos != data + len; pos++) {
+		if (len > 2) {
+			for (uint32_t i = 2; i < len; i++) {
+				if (data[i] == ']' && data[i - 1] == '-' && data[i - 2] == '[') {
+					data[i] = ' ';
+					data[i - 1] = '*';
+					data[i - 2] = ' ';
+				}
+			}
+		}
+		for (char *pos = (char*)data; (u8*)pos != data + len; pos++) {
 			char c = *(char*)pos;
 			switch (c) {
 			case'+': incr++; break; case'-': incr--; break; default: if (incr)
@@ -60,6 +69,7 @@ struct BfTransducer {
 				code.emplace_back(BfOpCode::_jmp, JumpCondition::not_zero, top);
 				code[top - 1].jmp_index = (uint32_t)code.size();
 				break;
+			case '*': push(BfOpCode(BfOpCode::_set, 0)); break;
 			case '.': push(BfOpCode(BfOpCode::_out)); break;
 			case ',': push(BfOpCode(BfOpCode::_inp)); break;
 			}
@@ -82,9 +92,10 @@ struct BfVirtualEnv {
 			case BfOpCode::_dec: *cell -= c.cell1; break;
 			case BfOpCode::_rt: cell += c.cell1; break;
 			case BfOpCode::_lt: cell -= c.cell1; break;
+			case BfOpCode::_set: *cell = c.cell1; break;
+			case BfOpCode::_jmp: if ((c.jmp_cond == JumpCondition::zero) ^ !!*cell) i = c.jmp_index - 1; break;
 			case BfOpCode::_out: putchar((int)*cell); break;
 			case BfOpCode::_inp: *cell = (uint32_t)getchar(); break;
-			case BfOpCode::_jmp: if ((c.jmp_cond == JumpCondition::zero) ^ !!*cell) i = c.jmp_index - 1; break;
 			}
 		}
 		return 0;
@@ -98,7 +109,7 @@ int main(int argc, char **argv) {
 		puts("run it as follows: ´interfuck script.bf´");
 	}
 	else if (argc >= 2) {
-		vector<byte> raw;
+		vector<u8> raw;
 		FILE *fhandle;
 		if (res = fopen_s(&fhandle, argv[1], "rb")) {
 			printf("error: file open failed with os errno %i\n", res);
@@ -106,7 +117,7 @@ int main(int argc, char **argv) {
 		}
 		int c;
 		while ((c = fgetc(fhandle)) != EOF)
-			switch (c) { case'+':case'-':case'>':case'<':case'[':case']':case'.':case',':raw.push_back(byte(c)); }
+			switch (c) { case'+':case'-':case'>':case'<':case'[':case']':case'.':case',':raw.push_back(u8(c)); }
 		// for (uint32_t i = 0; i < raw.size(); i++) putchar((int)raw[i]);
 		// putchar('\n');
 		raw.shrink_to_fit();
