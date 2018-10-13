@@ -4,3 +4,7 @@
 
 /.vs/C--/v15/Browse.VC.db
 /.vs/C--/v15/Browse.VC.opendb
+/x64
+/interfuck/x64
+/alt1.diagsession
+*.diagsession
