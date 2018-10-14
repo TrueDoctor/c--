@@ -4,6 +4,7 @@
 #include <stack>
 #include <thread>
 #include <chrono>
+#include <string.h>
 
 using namespace std;
 using bfcell = uint32_t;
@@ -126,16 +127,15 @@ struct BfVirtualEnv {
 };
 
 int main(int argc, char **argv) {
-	errno_t res;
 	if (argc <= 1) {
 		puts("interfuck is an (more or less) optimized brainfuck interpreter");
-		puts("run it as follows: ´interfuck script.bf´");
+		puts("run it as follows: `interfuck script.bf`");
 	}
 	else if (argc >= 2) {
 		vector<u8> raw;
 		FILE *fhandle;
-		if (res = fopen_s(&fhandle, argv[1], "rb")) {
-			printf("error: file open failed with os errno %i\n", res);
+		if ((fhandle = fopen(argv[1], "rb")) == NULL) {
+			printf("error: file open failed! Are you sure that %s exists?\n", argv[1]);
 			return -1;
 		}
 		int c;
@@ -162,6 +162,7 @@ int main(int argc, char **argv) {
 		const auto dt = chrono::high_resolution_clock::now() - t0;
 		puts("\n---------------");
 		printf("execution time: %llims", chrono::duration_cast<chrono::milliseconds>(dt).count());
+		fclose(fhandle);
 	}
 	return 0;
 }
