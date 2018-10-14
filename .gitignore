@@ -5,6 +5,8 @@
 /.vs
 /x64
 /interfuck/x64
-/alt1.diagsession
 *.diagsession
 *.ipch
+
+# outputs from the Nix package manager
+result
