@@ -1,10 +1,11 @@
+#define _CRT_SECURE_NO_DEPRECATE
 #include <cstdio>
 #include <iostream>
 #include <vector>
 #include <stack>
 #include <thread>
 #include <chrono>
-#include <string.h>
+#include <cstring>
 
 using namespace std;
 using bfcell = uint32_t;
@@ -80,7 +81,7 @@ struct BfTransducer {
 		uint32_t startindex;
 		bool in_loop = false;
 		int64_t shifts = 0;
-		for (uint32_t i = 0; i < len; i++) {
+		for (uint32_t i = 0; i < code.size(); i++) {
 			auto c = code[i];
 			if (c.type == BfOpCode::_jmp && c.jmp_cond == JumpCondition::zero) {
 				in_loop = true;
