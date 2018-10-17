@@ -2,9 +2,11 @@
 # Diese .gitignore-Datei wurde von Microsoft(R) Visual Studio automatisch erstellt.
 ################################################################################
 
-/.vs/C--/v15/Browse.VC.db
-/.vs/C--/v15/Browse.VC.opendb
+/.vs
 /x64
 /interfuck/x64
-/alt1.diagsession
 *.diagsession
+*.ipch
+
+# outputs from the Nix package manager
+result
