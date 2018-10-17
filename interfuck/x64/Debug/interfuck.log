@@ -1,1 +1,10 @@
-﻿  interfuck.vcxproj -> D:\Data\Documents\Projects\c--\x64\Debug\interfuck.exe
+﻿  main.cpp
+d:\data\documents\projects\c--\interfuck\main.cpp(104): warning C4244: "Argument": Konvertierung von "int64_t" in "const int", möglicher Datenverlust
+d:\data\documents\projects\c--\interfuck\main.cpp(106): warning C4244: "Argument": Konvertierung von "int64_t" in "const int", möglicher Datenverlust
+d:\data\documents\projects\c--\interfuck\main.cpp(155): warning C4474: "printf": zu viele Argumente für Formatzeichenfolge übergeben
+  d:\data\documents\projects\c--\interfuck\main.cpp(155): note: Platzhalter und deren Parameter erwarten 0 variadic-Argumente, es wurden aber 1 variadic-Argumente bereitgestellt.
+d:\data\documents\projects\c--\interfuck\main.cpp(158): warning C4474: "printf": zu viele Argumente für Formatzeichenfolge übergeben
+  d:\data\documents\projects\c--\interfuck\main.cpp(158): note: Platzhalter und deren Parameter erwarten 0 variadic-Argumente, es wurden aber 1 variadic-Argumente bereitgestellt.
+d:\data\documents\projects\c--\interfuck\main.cpp(167): warning C4474: "printf": zu viele Argumente für Formatzeichenfolge übergeben
+  d:\data\documents\projects\c--\interfuck\main.cpp(167): note: Platzhalter und deren Parameter erwarten 0 variadic-Argumente, es wurden aber 1 variadic-Argumente bereitgestellt.
+  interfuck.vcxproj -> D:\Data\Documents\Projects\c--\x64\Debug\interfuck.exe

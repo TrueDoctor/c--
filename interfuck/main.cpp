@@ -4,10 +4,12 @@
 #include <stack>
 #include <thread>
 #include <chrono>
+#include <unordered_map>
 
 using namespace std;
 using bfcell = uint32_t;
 using u8 = unsigned char;
+using cellmap = unordered_map<int32_t, int32_t>;
 
 enum class JumpCondition { not_zero, zero };
 
@@ -18,11 +20,13 @@ struct BfOpCode {
 	union {
 		struct { bfcell cell1; };
 		struct { JumpCondition jmp_cond; uint32_t jmp_index; };
+		struct { int32_t rel_pos; int32_t mult; };
 	};
 	BfOpCode() {  }
 	BfOpCode(BfOpCodeType type) : type(type) {  }  // inp, out, store
 	BfOpCode(BfOpCodeType type, bfcell cell) : type(type), cell1(cell) {  }  // inc, dec, rt, lt, set
 	BfOpCode(BfOpCodeType type, JumpCondition cond, uint32_t index) : type(type), jmp_cond(cond), jmp_index(index) {  }  // jmp
+	BfOpCode(BfOpCodeType type, int32_t rel_pos, int32_t mult) : type(type), rel_pos(rel_pos), mult(mult) {  }  // load
 };
 
 struct BfTransducer {
@@ -79,25 +83,94 @@ struct BfTransducer {
 		uint32_t startindex;
 		bool in_loop = false;
 		int64_t shifts = 0;
-		for (uint32_t i = 0; i < len; i++) {
+		cellmap mult;
+		for (uint32_t i = 0; i < code.size(); i++) {
 			auto c = code[i];
 			if (c.type == BfOpCode::_jmp && c.jmp_cond == JumpCondition::zero) {
 				in_loop = true;
 				startindex = i;
 				shifts = 0;
+				mult = cellmap();
 			}
 			if (in_loop) {
 				if (c.type == BfOpCode::_inp || c.type == BfOpCode::_out) {
 					in_loop = false;
-				}
-				if (c.type == BfOpCode::_lt) shifts -= c.cell1;
-				else if (c.type == BfOpCode::_rt) shifts += c.cell1;
-				if (c.type == BfOpCode::_jmp && c.jmp_cond == JumpCondition::not_zero) {
-					// sachen machen
+					continue;
+				} else if (c.type == BfOpCode::_lt) {
+					shifts -= c.cell1;
+				} else if (c.type == BfOpCode::_rt) {
+					shifts += c.cell1;
+				} else if (c.type == BfOpCode::_inc) {
+					mult[shifts] += c.cell1;
+				} else if (c.type == BfOpCode::_dec) {
+					mult[shifts] -= c.cell1;
+				} else if (c.type == BfOpCode::_jmp && c.jmp_cond == JumpCondition::not_zero) {
+					auto mf = mult.find(0);
+					if (mf == mult.end()) {
+						in_loop = false;
+						continue;
+					}
+					auto m = mf->second;
+					if (m == 0) puts("warning: infinite loop detected");
+					if (shifts != 0 || m != -1) {
+						in_loop = false;
+						continue;
+					}
+					uint32_t n = startindex;
+					code[n++] = BfOpCode(BfOpCode::_store);
+					code[n++] = BfOpCode(BfOpCode::_set, 0);
+					for (auto j = mult.begin(); j != mult.end(); j++) {
+						if (j->first == 0 || j->second == 0) continue;
+						code[n++] = BfOpCode(BfOpCode::_load, j->first, j->second);
+					}
+					for (; n <= i; n++) code[n] = BfOpCode(BfOpCode::_nop);
 				}
 			}
 		}
 		return 0;
+	}
+	void print() {
+		for (uint32_t i = 0; i < code.size(); i++) {
+			auto c = code[i];
+			printf("%4d: ", i);
+			switch (c.type) {
+			case BfOpCode::_inc:
+				printf("+ %u\n", c.cell1);
+				break;
+			case BfOpCode::_dec:
+				printf("- %u\n", c.cell1);
+				break;
+			case BfOpCode::_rt:
+				printf("> %u\n", c.cell1);
+				break;
+			case BfOpCode::_lt:
+				printf("< %u", c.cell1);
+			case BfOpCode::_nop:
+				puts("");
+				break;
+			case BfOpCode::_set:
+				printf("= %u\n", c.cell1);
+				break;
+			case BfOpCode::_inp:
+				printf("cin<<\n");
+				break;
+			case BfOpCode::_out:
+				printf("cout>>\n");
+				break;
+			case BfOpCode::_jmp:
+				printf("=> %c0 | %u\n", c.jmp_cond == JumpCondition::zero ? '=' : '!', c.jmp_index);
+				break;
+			case BfOpCode::_load:
+				printf("x>>[%i]*%i\n", c.rel_pos, c.mult);
+				break;
+			case BfOpCode::_store:
+				printf("x<<\n");
+				break;
+			}
+		}
+	}
+	int join() {
+		// ToDo: remove nops
 	}
 };
 
@@ -108,14 +181,18 @@ struct BfVirtualEnv {
 		uint32_t memory[4096];
 		memset(memory, 0, sizeof(memory));
 		uint32_t *cell = memory;
+		bfcell storeval;
 		for (uint32_t i = 0; i < len; i++) {
 			const BfOpCode c = code[i];
-			switch (c.type) {
+			const BfOpCode::BfOpCodeType ct = c.type;
+			switch (ct) {
 			case BfOpCode::_inc: *cell += c.cell1; break;
 			case BfOpCode::_dec: *cell -= c.cell1; break;
 			case BfOpCode::_rt: cell += c.cell1; break;
 			case BfOpCode::_lt: cell -= c.cell1; break;
 			case BfOpCode::_set: *cell = c.cell1; break;
+			case BfOpCode::_store: storeval = *cell; break;
+			case BfOpCode::_load: cell[c.rel_pos] += storeval * c.mult; break;
 			case BfOpCode::_jmp: if ((c.jmp_cond == JumpCondition::zero) ^ !!*cell) i = c.jmp_index - 1; break;
 			case BfOpCode::_out: putchar((int)*cell); break;
 			case BfOpCode::_inp: *cell = (uint32_t)getchar(); break;
@@ -153,6 +230,7 @@ int main(int argc, char **argv) {
 			puts("error: error while optimizing bf file");
 			return -1;
 		}
+		duc.print();
 		BfVirtualEnv env(duc.code);
 		const auto t0 = chrono::high_resolution_clock::now();
 		if (env.run()) {
@@ -163,5 +241,6 @@ int main(int argc, char **argv) {
 		puts("\n---------------");
 		printf("execution time: %llims", chrono::duration_cast<chrono::milliseconds>(dt).count());
 	}
+	cin.get();
 	return 0;
 }

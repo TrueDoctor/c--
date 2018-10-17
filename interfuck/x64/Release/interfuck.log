@@ -1,7 +1,9 @@
 ﻿  main.cpp
+d:\data\documents\projects\c--\interfuck\main.cpp(104): warning C4244: "Argument": Konvertierung von "int64_t" in "const int", möglicher Datenverlust
+d:\data\documents\projects\c--\interfuck\main.cpp(106): warning C4244: "Argument": Konvertierung von "int64_t" in "const int", möglicher Datenverlust
   Code wird generiert.
-  272 of 273 functions (99.6%) were compiled, the rest were copied from previous compilation.
-    75 functions were new in current compilation
+  2 of 555 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Codegenerierung ist abgeschlossen.
   interfuck.vcxproj -> D:\Data\Documents\Projects\c--\x64\Release\interfuck.exe
