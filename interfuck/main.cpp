@@ -20,13 +20,13 @@ struct BfOpCode {
 		_nop, _inc, _dec, _rt, _lt, _set, _inp, _out, _jmp, _load, _store,
 	} type;
 	union {
-		struct { bfcell cell1; };
+		struct { bfcell value1; };
 		struct { JumpCondition jmp_cond; uint32_t jmp_index; };
 		struct { int32_t rel_pos; int32_t mult; };
 	};
 	BfOpCode() {  }
 	BfOpCode(BfOpCodeType type) : type(type) {  }  // inp, out, store
-	BfOpCode(BfOpCodeType type, bfcell cell) : type(type), cell1(cell) {  }  // inc, dec, rt, lt, set
+	BfOpCode(BfOpCodeType type, bfcell cell) : type(type), value1(cell) {  }  // inc, dec, rt, lt, set
 	BfOpCode(BfOpCodeType type, JumpCondition cond, uint32_t index) : type(type), jmp_cond(cond), jmp_index(index) {  }  // jmp
 	BfOpCode(BfOpCodeType type, int32_t rel_pos, int32_t mult) : type(type), rel_pos(rel_pos), mult(mult) {  }  // load
 };
@@ -87,43 +87,46 @@ struct BfTransducer {
 		int64_t shifts = 0;
 		cellmap mult;
 		for (uint32_t i = 0; i < code.size(); i++) {
-			auto c = code[i];
-			if (c.type == BfOpCode::_jmp && c.jmp_cond == JumpCondition::zero) {
+			/*if(i==1383) {
+				int dennisistdumm = true;
+			}*/
+			const auto op_code = code[i];
+			if (op_code.type == BfOpCode::_jmp && op_code.jmp_cond == JumpCondition::zero) {
 				in_loop = true;
 				startindex = i;
 				shifts = 0;
 				mult = cellmap();
 			}
 			if (in_loop) {
-				if (c.type == BfOpCode::_inp || c.type == BfOpCode::_out) {
+				if (op_code.type == BfOpCode::_inp || op_code.type == BfOpCode::_out) {
 					in_loop = false;
 					continue;
-				} else if (c.type == BfOpCode::_lt) {
-					shifts -= c.cell1;
-				} else if (c.type == BfOpCode::_rt) {
-					shifts += c.cell1;
-				} else if (c.type == BfOpCode::_inc) {
-					mult[shifts] += c.cell1;
-				} else if (c.type == BfOpCode::_dec) {
-					mult[shifts] -= c.cell1;
-				} else if (c.type == BfOpCode::_jmp && c.jmp_cond == JumpCondition::not_zero) {
+				} else if (op_code.type == BfOpCode::_lt) {
+					shifts -= op_code.value1;
+				} else if (op_code.type == BfOpCode::_rt) {
+					shifts += op_code.value1;
+				} else if (op_code.type == BfOpCode::_inc) {
+					mult[shifts] += op_code.value1;
+				} else if (op_code.type == BfOpCode::_dec) {
+					mult[shifts] -= op_code.value1;
+				} else if (op_code.type == BfOpCode::_jmp && op_code.jmp_cond == JumpCondition::not_zero) {
 					auto mf = mult.find(0);
-					if (mf == mult.end()) {
+					if (shifts != 0 || mf == mult.end()) {
 						in_loop = false;
 						continue;
 					}
 					auto m = mf->second;
 					if (m == 0) puts("warning: infinite loop detected");
-					if (shifts != 0 || m != -1) {
+					if (m != -1) {
 						in_loop = false;
 						continue;
 					}
 					uint32_t n = startindex;
 					code[n++] = BfOpCode(BfOpCode::_store);
 					code[n++] = BfOpCode(BfOpCode::_set, 0);
-					for (auto j = mult.begin(); j != mult.end(); j++) {
-						if (j->first == 0 || j->second == 0) continue;
-						code[n++] = BfOpCode(BfOpCode::_load, j->first, j->second);
+					for (auto& j : mult) {
+						if (j.first == 0 || j.second == 0) continue;
+						code[n++] = BfOpCode(BfOpCode::_load, j.first, j.second);
 					}
 					for (; n <= i; n++) code[n] = BfOpCode(BfOpCode::_nop);
 				}
@@ -137,21 +140,21 @@ struct BfTransducer {
 			printf("%4d: ", i);
 			switch (c.type) {
 			case BfOpCode::_inc:
-				printf("+ %u\n", c.cell1);
+				printf("+ %u\n", c.value1);
 				break;
 			case BfOpCode::_dec:
-				printf("- %u\n", c.cell1);
+				printf("- %u\n", c.value1);
 				break;
 			case BfOpCode::_rt:
-				printf("> %u\n", c.cell1);
+				printf("> %u\n", c.value1);
 				break;
 			case BfOpCode::_lt:
-				printf("< %u", c.cell1);
+				printf("< %u", c.value1);
 			case BfOpCode::_nop:
 				puts("");
 				break;
 			case BfOpCode::_set:
-				printf("= %u\n", c.cell1);
+				printf("= %u\n", c.value1);
 				break;
 			case BfOpCode::_inp:
 				printf("cin<<\n");
@@ -187,12 +190,15 @@ struct BfVirtualEnv {
 		for (uint32_t i = 0; i < len; i++) {
 			const BfOpCode c = code[i];
 			const BfOpCode::BfOpCodeType ct = c.type;
+			printf("%i", i);
+			if (ct == BfOpCode::_jmp) printf(" %i", *cell);
+			puts("");
 			switch (ct) {
-			case BfOpCode::_inc: *cell += c.cell1; break;
-			case BfOpCode::_dec: *cell -= c.cell1; break;
-			case BfOpCode::_rt: cell += c.cell1; break;
-			case BfOpCode::_lt: cell -= c.cell1; break;
-			case BfOpCode::_set: *cell = c.cell1; break;
+			case BfOpCode::_inc: *cell += c.value1; break;
+			case BfOpCode::_dec: *cell -= c.value1; break;
+			case BfOpCode::_rt: cell += c.value1; break;
+			case BfOpCode::_lt: cell -= c.value1; break;
+			case BfOpCode::_set: *cell = c.value1; break;
 			case BfOpCode::_store: storeval = *cell; break;
 			case BfOpCode::_load: cell[c.rel_pos] += storeval * c.mult; break;
 			case BfOpCode::_jmp: if ((c.jmp_cond == JumpCondition::zero) ^ !!*cell) i = c.jmp_index - 1; break;
@@ -212,7 +218,7 @@ int main(int argc, char **argv) {
 	else if (argc >= 2) {
 		vector<u8> raw;
 		FILE *fhandle;
-		if ((fhandle = fopen(argv[1], "rb")) == NULL) {
+		if ((fhandle = fopen(argv[1], "rb")) == nullptr) {
 			printf("error: file open failed! Are you sure that %s exists?\n", argv[1]);
 			return -1;
 		}
