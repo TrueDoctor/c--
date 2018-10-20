@@ -1,0 +1,11 @@
+C:\Users\Dennis\Source\Repos\C--\Interpeter\obj\Debug\netcoreapp2.1\Interpeter.csprojAssemblyReference.cache
+C:\Users\Dennis\Source\Repos\C--\Interpeter\obj\Debug\netcoreapp2.1\Interpeter.csproj.CoreCompileInputs.cache
+C:\Users\Dennis\Source\Repos\C--\Interpeter\obj\Debug\netcoreapp2.1\Interpeter.AssemblyInfoInputs.cache
+C:\Users\Dennis\Source\Repos\C--\Interpeter\obj\Debug\netcoreapp2.1\Interpeter.AssemblyInfo.cs
+C:\Users\Dennis\Source\Repos\C--\Interpeter\bin\Debug\netcoreapp2.1\Interpeter.deps.json
+C:\Users\Dennis\Source\Repos\C--\Interpeter\bin\Debug\netcoreapp2.1\Interpeter.runtimeconfig.json
+C:\Users\Dennis\Source\Repos\C--\Interpeter\bin\Debug\netcoreapp2.1\Interpeter.runtimeconfig.dev.json
+C:\Users\Dennis\Source\Repos\C--\Interpeter\bin\Debug\netcoreapp2.1\Interpeter.dll
+C:\Users\Dennis\Source\Repos\C--\Interpeter\bin\Debug\netcoreapp2.1\Interpeter.pdb
+C:\Users\Dennis\Source\Repos\C--\Interpeter\obj\Debug\netcoreapp2.1\Interpeter.dll
+C:\Users\Dennis\Source\Repos\C--\Interpeter\obj\Debug\netcoreapp2.1\Interpeter.pdb

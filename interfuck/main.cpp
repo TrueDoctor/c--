@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_DEPRECATE
 #include <cstdio>
 #include <iostream>
 #include <vector>
@@ -19,7 +18,7 @@ struct BfOpCode {
 	enum BfOpCodeType {
 		_nop, _inc, _dec, _rt, _lt, _set, _inp, _out, _jmp, _load, _store,
 	} type;
-	union {
+	struct {
 		struct { bfcell value1; };
 		struct { JumpCondition jmp_cond; uint32_t jmp_index; };
 		struct { int32_t rel_pos; int32_t mult; };
@@ -121,7 +120,7 @@ struct BfTransducer {
 						in_loop = false;
 						continue;
 					}
-					uint32_t n = startindex;
+					uint32_t n = startindex+1;
 					code[n++] = BfOpCode(BfOpCode::_store);
 					code[n++] = BfOpCode(BfOpCode::_set, 0);
 					for (auto& j : mult) {
@@ -129,6 +128,7 @@ struct BfTransducer {
 						code[n++] = BfOpCode(BfOpCode::_load, j.first, j.second);
 					}
 					for (; n <= i; n++) code[n] = BfOpCode(BfOpCode::_nop);
+					in_loop = false;
 				}
 			}
 		}
@@ -154,7 +154,7 @@ struct BfTransducer {
 				puts("");
 				break;
 			case BfOpCode::_set:
-				printf("= %u\n", c.value1);
+				printf("= [%i]*%i\n", c.rel_pos, c.value1);
 				break;
 			case BfOpCode::_inp:
 				printf("cin<<\n");
@@ -190,9 +190,9 @@ struct BfVirtualEnv {
 		for (uint32_t i = 0; i < len; i++) {
 			const BfOpCode c = code[i];
 			const BfOpCode::BfOpCodeType ct = c.type;
-			printf("%i", i);
-			if (ct == BfOpCode::_jmp) printf(" %i", *cell);
-			puts("");
+			// printf("%i", i);
+			// if (ct == BfOpCode::_jmp) printf(" %i", *cell);
+			//puts("");
 			switch (ct) {
 			case BfOpCode::_inc: *cell += c.value1; break;
 			case BfOpCode::_dec: *cell -= c.value1; break;
@@ -201,7 +201,7 @@ struct BfVirtualEnv {
 			case BfOpCode::_set: *cell = c.value1; break;
 			case BfOpCode::_store: storeval = *cell; break;
 			case BfOpCode::_load: cell[c.rel_pos] += storeval * c.mult; break;
-			case BfOpCode::_jmp: if ((c.jmp_cond == JumpCondition::zero) ^ !!*cell) i = c.jmp_index - 1; break;
+			case BfOpCode::_jmp: if (!(c.jmp_cond == JumpCondition::zero) ^ (cell==nullptr)) i = c.jmp_index - 1; break;
 			case BfOpCode::_out: putchar((int)*cell); break;
 			case BfOpCode::_inp: *cell = (uint32_t)getchar(); break;
 			}
@@ -218,13 +218,15 @@ int main(int argc, char **argv) {
 	else if (argc >= 2) {
 		vector<u8> raw;
 		FILE *fhandle;
-		if ((fhandle = fopen(argv[1], "rb")) == nullptr) {
+		/*if ((fhandle = fopen(argv[1], "rb")) == nullptr) {
 			printf("error: file open failed! Are you sure that %s exists?\n", argv[1]);
 			return -1;
-		}
+		}*/
 		int c;
+		/*
 		while ((c = fgetc(fhandle)) != EOF)
 			switch (c) { case'+':case'-':case'>':case'<':case'[':case']':case'.':case',':raw.push_back(u8(c)); }
+		*/
 		// for (uint32_t i = 0; i < raw.size(); i++) putchar((int)raw[i]);
 		// putchar('\n');
 		raw.shrink_to_fit();
@@ -247,7 +249,7 @@ int main(int argc, char **argv) {
 		const auto dt = chrono::high_resolution_clock::now() - t0;
 		puts("\n---------------");
 		printf("execution time: %llims", chrono::duration_cast<chrono::milliseconds>(dt).count());
-		fclose(fhandle);
+		//fclose(fhandle);
 	}
 	cin.get();
 	return 0;

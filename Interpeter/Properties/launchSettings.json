@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Interpeter": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\mandelbrot.bf"
+    }
+  }
+}
