@@ -94,6 +94,7 @@ struct BfTransducer {
 				startindex = i;
 				shifts = 0;
 				mult = cellmap();
+				sets = vector<int>();
 			}
 			if (in_loop) {
 				if (c.type == BfOpCode::_inp || c.type == BfOpCode::_out) {
@@ -121,7 +122,7 @@ struct BfTransducer {
 						in_loop = false;
 						continue;
 					}
-					uint32_t n = startindex;
+					uint32_t n = startindex+1;
 					code[n++] = BfOpCode(BfOpCode::_zstore);
 					//code[n++] = BfOpCode(BfOpCode::_set, 0);
 					for (auto j = mult.begin(); j != mult.end(); j++) {
@@ -133,6 +134,7 @@ struct BfTransducer {
 						code[n++] = BfOpCode(BfOpCode::_set, set, 0);
 					}
 					for (; n <= i; n++) code[n] = BfOpCode(BfOpCode::_nop);
+					in_loop = false;
 				}
 			}
 		}
@@ -238,7 +240,7 @@ int main(int argc, char **argv) {
 			puts("error: error while optimizing bf file");
 			return -1;
 		}
-		duc.print();
+		//duc.print();
 		BfVirtualEnv env(duc.code);
 		const auto t0 = chrono::high_resolution_clock::now();
 		if (env.run()) {
