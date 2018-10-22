@@ -158,6 +158,10 @@ struct BfOptimizer {
 			else if (c == '*')
 				code.add(BfInstr::Set(0));
 		}
+		if (!pos_stack.empty()) {
+			puts("error: unclosing bracket");
+			exit(-1);
+		}
 		return code;
 	}
 	void optimize(BfOptCode &code) const {
