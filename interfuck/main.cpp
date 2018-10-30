@@ -261,6 +261,11 @@ i32 main(i32 argc, cstr argv[]) {
 		return -1;
 	}
 
+	if (strcmp(argv[1], "--help") == 0) {
+		print_help();
+		return 0;
+	}
+
 	ifstream file (argv[1]);
 	if (!file.is_open()) {
 		printf("error: could not open file '%s'\n", argv[1]);
