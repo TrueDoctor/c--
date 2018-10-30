@@ -8,8 +8,9 @@
 #include <stack>
 #include <chrono>
 #include <unordered_map>
-#include <io.h>
 #include <fcntl.h>
+#include <fstream>
+#include <string.h>
 
 using namespace std;
 using i8 = int8_t; using i16 = int16_t; using i32 = int32_t; using i64 = int64_t;
@@ -56,13 +57,13 @@ struct BfInstr {
 	inline static BfInstr Load(i32 addr, icell multiplier) { return BfInstr(BfInstrCode::load, LoadType{addr, multiplier}); }
 	inline static BfInstr Relset(i32 addr, ucell value) { return BfInstr(BfInstrCode::relset, RelsetType{addr, value}); }
 	void print() const {
-		if (type == BfInstrCode::add) printf("%c %lli\n", add < 0 ? '-' : '+', add < 0 ? -add : add);
-		else if (type == BfInstrCode::shift) printf("%c %lli\n", shift < 0 ? '<' : '>', shift < 0 ? -shift : shift);
+		if (type == BfInstrCode::add) printf("%c %li\n", add < 0 ? '-' : '+', add < 0 ? -add : add);
+		else if (type == BfInstrCode::shift) printf("%c %li\n", shift < 0 ? '<' : '>', shift < 0 ? -shift : shift);
 		else if (type == BfInstrCode::nop) puts("_none_");
 		else if (type == BfInstrCode::set) printf("set %u\n", set);
 		else if (type == BfInstrCode::jump) printf("jump to line %u when %sZERO\n", jump.pos, jump.zero ? "" : "NOT ");
 		else if (type == BfInstrCode::zstore) puts("zstore");
-		else if (type == BfInstrCode::load) printf("load to $%c%i with %ix\n", load.addr < 0 ? '-' : '+', abs(load.addr), load.multiplier);
+		else if (type == BfInstrCode::load) printf("load to $%c%i with %lix\n", load.addr < 0 ? '-' : '+', abs(load.addr), load.multiplier);
 		else if (type == BfInstrCode::relset) printf("set to $%c%i value %i\n", relset.addr < 0 ? '-' : '+', abs(relset.addr), relset.value);
 		else if (type == BfInstrCode::print) puts("print");
 		else if (type == BfInstrCode::getchr) puts("getchr");
@@ -258,24 +259,23 @@ i32 main(i32 argc, cstr argv[]) {
 		puts("error: needing at least one argument");
 		print_help();
 		return -1;
-		/* argc = 2;
-		argv = new cstr[2]{ argv[0], (cstr)"mandelbrot.bf" };*/
 	}
-	cstr filename = argv[argc - 1];
-	i32 file = _open(filename, _O_BINARY | _O_RDWR);
-	if (file < 0) {
-		printf("error: could not open the file '%s'\n", filename);
-		return -1;
-	}
-	auto raw_size = _filelengthi64(file);
-	u8 *buf = new u8[raw_size];
-	if (_read(file, buf, (u32)raw_size) < 0) {
-		printf("error: could not read in the file '%s'\n", filename);
-		return -1;
-	}
-	_close(file);
 
-	BfOptimizer optimizer(BfRawCode((cstr)buf, (u32)raw_size));
+	ifstream file (argv[1]);
+	if (!file.is_open()) {
+		printf("error: could not open file '%s'\n", argv[1]);
+		return -1;
+	}
+
+	file.seekg (0, file.end);
+	int size = file.tellg();
+	file.seekg (0, file.beg);
+
+	char *buf = new char[size];
+	file.read(buf, size);
+	file.close();
+
+	BfOptimizer optimizer(BfRawCode((cstr)buf, (u32)size));
 	BfOptCode code = optimizer.optimize();
 	// code.print();
 
@@ -287,8 +287,6 @@ i32 main(i32 argc, cstr argv[]) {
 	runner.run();
 	auto dt = chrono::high_resolution_clock::now() - t0;
 	printf("---\nthe code took %llims", chrono::duration_cast<chrono::milliseconds>(dt).count());
-
-	cin.get();
 
 	return 0;
 }
