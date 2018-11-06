@@ -1,0 +1,12 @@
+# test program
+# string don't work ;(
+void main() {
+    print(hey world);
+    int x = 10;
+    while (true) {
+        print( * );
+        x = x - 1;
+    }
+}
+
+main();
