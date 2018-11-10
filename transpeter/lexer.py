@@ -35,8 +35,6 @@ class Lexer:
                 if v:
                     if k == 'int':
                         v = int(v)
-                    elif k == 'sep':
-                        v = re.sub(r'\s+', ' ', v)
                     elif k == 'id' and v in self.keywords:
                         k = 'key'
                     yield Token(k, v, line)
