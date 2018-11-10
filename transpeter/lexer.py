@@ -44,5 +44,3 @@ class Lexer:
                         k = 'key'
                     yield Token(k, v, line)
                     break
-
-                    
