@@ -1,5 +1,10 @@
 import re
-import sys
+
+from utils import Token
+
+
+class LexerError(Exception):
+    pass
 
 
 class Lexer:
@@ -28,7 +33,7 @@ class Lexer:
         while pos < size:
             match = self.pattern.match(self.program, pos)
             if not match:
-                sys.exit('Error: invalid token in line {}'.format(line))
+                raise LexerError('Error: invalid token in line {}'.format(line))
             pos = match.end()
             line += self.program[match.start():match.end()].count('\n')
             for k, v in match.groupdict().items():
@@ -39,13 +44,3 @@ class Lexer:
                         k = 'key'
                     yield Token(k, v, line)
                     break
-
-
-class Token:
-    def __init__(self, token_type, value, line):
-        self.type = token_type
-        self.value = value
-        self.line = line
-
-    def __repr__(self):
-        return '{}: {}'.format(self.type, self.value)
