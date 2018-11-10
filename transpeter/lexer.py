@@ -3,27 +3,34 @@ import sys
 
 
 class Lexer:
+    types = ['void', 'int']
+    control = ['if', 'else', 'while', 'for', 'return', 'inline']
+    binary_ops = ['+', '-', '*', '/', '%', '==', '!=', '>', '>=', '<', '<=', '|', '&']
+    unary_ops = ['!']
+    ops = [*unary_ops, *binary_ops]
+    separators = ['{', '}', '(', ')', ';', ',', '=']
+    keywords = [*types, *control]
+    
     def __init__(self, program):
-        self.program = program
-        self.keywords = []
+        self.program = re.sub(r'#.*', '', program)
         regex = [
-            r'(?P<sep>\(|\)|{|}|;|,|\s+)',
-            r'(?P<op>=|\+|-|\*|/|%)',
+            r'(?P<op>{})'.format('|'.join(re.escape(i) for i in Lexer.ops)),
+            r'(?P<sep>{})'.format('|'.join(re.escape(i) for i in Lexer.separators)),
             r'(?P<int>[0-9]+)',
             r'(?P<id>[a-zA-Z_][a-zA-Z0-9_]*)'
         ]
-        self.pattern = re.compile('|'.join(regex))
+        self.pattern = re.compile(r'\s*(?:{})\s*'.format('|'.join(regex)))
 
     def tokenize(self):
-        tokens = []
-        line = 0
-        self.program = re.sub(r'#.*', '', self.program)
-        while self.program:
-            match = self.pattern.match(self.program)
+        pos = 0
+        line = 1
+        size = len(self.program)
+        while pos < size:
+            match = self.pattern.match(self.program, pos)
             if not match:
                 sys.exit('Error: invalid token in line {}'.format(line))
-            line += self.program[:match.end()].count('\n')
-            self.program = self.program[match.end():]
+            pos = match.end()
+            line += self.program[match.start():match.end()].count('\n')
             for k, v in match.groupdict().items():
                 if v:
                     if k == 'int':
@@ -32,13 +39,13 @@ class Lexer:
                         v = re.sub(r'\s+', ' ', v)
                     elif k == 'id' and v in self.keywords:
                         k = 'key'
-                    tokens.append(Token(k, v, line))
-        return tokens
+                    yield Token(k, v, line)
+                    break
 
 
 class Token:
-    def __init__(self, type, value, line):
-        self.type = type
+    def __init__(self, token_type, value, line):
+        self.type = token_type
         self.value = value
         self.line = line
 
