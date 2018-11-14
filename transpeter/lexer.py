@@ -11,7 +11,7 @@ class Lexer:
     types = ['int']
     control = ['if', 'else', 'while', 'for', 'return', 'inline']
     separators = ['{', '}', '(', ')', ';', ',', '=']  # currently '=' is a separator
-    binary_ops = ['+', '-', '*', '/', '%', '==', '!=', '>', '>=', '<', '<=', 'or', 'and', 'not']
+    ops = ['+', '-', '*', '/', '%', '==', '!=', '>', '>=', '<', '<=', 'or', 'and', 'not']
     keywords = ['void', *types, *control]
 
     def __init__(self, program):
