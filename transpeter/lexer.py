@@ -37,7 +37,12 @@ class Lexer:
             for k, v in match.groupdict().items():
                 if v:
                     if k == 'int':
-                        v = int(v)
+                        if v == 'true':
+                            v = 1
+                        elif v == 'false':
+                            v = 0
+                        else:
+                            v = int(v)
                     # if the token is an operator, a separator or a keyword
                     # k is set to v for easier parsing
                     elif k == 'id' and v in Lexer.keywords:
