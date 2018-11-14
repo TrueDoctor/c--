@@ -8,20 +8,18 @@ class LexerError(Exception):
 
 
 class Lexer:
-    types = ['void', 'int']
+    types = ['int']
     control = ['if', 'else', 'while', 'for', 'return', 'inline']
-    binary_ops = ['+', '-', '*', '/', '%', '==', '!=', '>', '>=', '<', '<=', '|', '&']
-    unary_ops = ['!']
-    ops = [*unary_ops, *binary_ops]
-    separators = ['{', '}', '(', ')', ';', ',', '=']
-    keywords = [*types, *control]
-    
+    separators = ['{', '}', '(', ')', ';', ',', '=']  # currently '=' is a separator
+    binary_ops = ['+', '-', '*', '/', '%', '==', '!=', '>', '>=', '<', '<=', 'or', 'and', 'not']
+    keywords = ['void', *types, *control]
+
     def __init__(self, program):
         self.program = re.sub(r'#.*', '', program)
         regex = [
             r'(?P<op>{})'.format('|'.join(re.escape(i) for i in Lexer.ops)),
             r'(?P<sep>{})'.format('|'.join(re.escape(i) for i in Lexer.separators)),
-            r'(?P<int>[0-9]+)',
+            r'(?P<int>[0-9]+|true|false)',
             r'(?P<id>[a-zA-Z_][a-zA-Z0-9_]*)'
         ]
         self.pattern = re.compile(r'\s*(?:{})\s*'.format('|'.join(regex)))
@@ -40,7 +38,11 @@ class Lexer:
                 if v:
                     if k == 'int':
                         v = int(v)
-                    elif k == 'id' and v in self.keywords:
-                        k = 'key'
+                    # if the token is an operator, a separator or a keyword
+                    # k is set to v for easier parsing
+                    elif k == 'id' and v in Lexer.keywords:
+                        k = v
+                    elif k == 'op' or k == 'sep':
+                        k = v
                     yield Token(k, v, line)
                     break
