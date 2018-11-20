@@ -22,6 +22,7 @@ class Lexer:
             r'(?P<id>[a-zA-Z_][a-zA-Z0-9_]*)'
         ]
         self.pattern = re.compile(r'\s*(?:{})'.format('|'.join(regex)))
+        self.inline = re.compile(r'((?:.|\s)*?);')
 
     def tokenize(self, program):
         program = re.sub(r'#.*', '', program.rstrip())
@@ -52,6 +53,13 @@ class Lexer:
                     # k is set to v for easier parsing
                     elif k == 'id' and v in Lexer.control:
                         k = v
+                        if v == 'inline':
+                            inline = self.inline.match(program, pos)
+                            if not inline:
+                                raise LexerError('unexpected EOF')
+                            pos = inline.end()
+                            line += program[inline.start():inline.end()].count('\n')
+                            v = re.sub(r'[^+-\[\].,]', '', inline[1])
                     elif k == 'op' or k == 'sep':
                         k = v
                     yield Token(k, v, line)

@@ -10,5 +10,6 @@ void main(int arg) {
                 main();
             }
         }
+        inline [bc-.];
     }
 }
