@@ -1,5 +1,5 @@
 class Token:
-     __slots__ = ['type', 'value', 'line']
+    __slots__ = ['type', 'value', 'line']
 
     def __init__(self, token_type, value, line):
         self.type = token_type
@@ -14,14 +14,14 @@ class Token:
             return self.type == other.type
         else:
             return self.type == other
-     
-     
+
+
 class AstNode:
-    def __init__(self, name, *nodes):
+   def __init__(self, name, *nodes):
         self.name = name
         self.nodes = nodes
 
-    def print(self, level=0):
+   def print(self, level=0):
         print(self.name)
         level += 1
         for node in self.nodes:
@@ -30,20 +30,20 @@ class AstNode:
 
 
 class Peekable:
-    __slots__ = ['gen', 'peek', 'eof']
+   __slots__ = ['gen', 'peek', 'eof']
 
-    def __init__(self, generator, eof=None):
+   def __init__(self, generator, eof=None):
         self.gen = generator
         self.peek = next(generator, eof)
         self.eof = eof
 
-    def next(self):
+   def next(self):
         temp = self.peek
         self.peek = next(self.gen, self.eof)
         return temp
-     
-     
-def print_tree(tree, prefix=""):  # doesn't work
+
+
+def print_tree(tree, prefix=""):
     if isinstance(tree, AstNode):
         print(tree.name)
         size = len(tree.nodes)

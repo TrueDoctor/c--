@@ -33,7 +33,7 @@ class Lexer:
             if not match:
                 raise LexerError('Error: invalid token in line {}'.format(line))
             pos = match.end()
-            line += self.program[match.start():match.end()].count('\n')
+            line += program[match.start():match.end()].count('\n')
             for k, v in match.groupdict().items():
                 if v:
                     if k == 'int':
