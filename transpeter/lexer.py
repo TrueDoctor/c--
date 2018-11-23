@@ -18,7 +18,7 @@ class Lexer:
             r'(?P<op>{})'.format('|'.join(re.escape(i) for i in Lexer.ops)),
             r'(?P<sep>{})'.format('|'.join(re.escape(i) for i in Lexer.separators)),
             r'(?P<int>[0-9]+|true|false)',
-            r'\'(?P<char>.|\n)\'',
+            r'\'(?P<char>.|\s)\'',
             r'(?P<id>[a-zA-Z_][a-zA-Z0-9_]*)'
         ]
         self.pattern = re.compile(r'\s*(?:{})'.format('|'.join(regex)))
@@ -59,7 +59,7 @@ class Lexer:
                                 raise LexerError('unexpected EOF')
                             pos = inline.end()
                             line += program[inline.start():inline.end()].count('\n')
-                            v = re.sub(r'[^+-\[\].,]', '', inline[1])
+                            v = re.sub(r'[^+\-><\[\].,]', '', inline[1])
                     elif k == 'op' or k == 'sep':
                         k = v
                     yield Token(k, v, line)
