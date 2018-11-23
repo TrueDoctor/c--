@@ -117,11 +117,8 @@ class Parser:
             expect(next_token, ';')
             return AstNode('return', expr)
         elif self.tokens.peek == 'inline':
-            self.tokens.next()
-            code = None  # TODO: parse inline code
-            next_token = self.tokens.next()
-            expect(next_token, ';')
-            return AstNode('inline', code)
+            code = self.tokens.next()
+            return AstNode('inline', code.value)
         elif self.tokens.peek == 'id':
             name = self.tokens.next()
             if self.tokens.peek == '(':  # function call
