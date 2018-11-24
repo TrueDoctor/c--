@@ -127,11 +127,12 @@ class Parser:
                 expect(next_token, ';')
                 return AstNode('func_call', name.value, args)
             next_token = self.tokens.next()
-            if next_token == '=':  # assignment
+            if next_token in ('=', '+=', '-=', '*=', '/=', '%='):  # assignment
+                assign_op = next_token.type
                 expr = self._parse_expr()
                 next_token = self.tokens.next()
                 expect(next_token, ';')
-                return AstNode('assign', name.value, expr)
+                return AstNode(assign_op, name.value, expr)
             else:
                 raise ParserError('line {}: expected function call or assignment'.format(next_token.line))
         elif self.tokens.peek == Parser.EOF:
