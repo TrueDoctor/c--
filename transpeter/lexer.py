@@ -18,7 +18,7 @@ class Lexer:
             r'(?P<sep>{})'.format('|'.join(re.escape(i) for i in Lexer.separators)),
             r'(?P<op>{})'.format('|'.join(re.escape(i) for i in Lexer.ops)),
             r'(?P<int>[0-9]+|true|false)',
-            r'\'(?P<char>.|\s)\'',
+            r'\'(?P<char>.)\'',
             r'(?P<id>[a-zA-Z_][a-zA-Z0-9_]*)'
         ]
         self.pattern = re.compile(r'\s*(?:{})'.format('|'.join(regex)))
