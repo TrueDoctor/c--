@@ -36,7 +36,7 @@ class Parser:
                 else:  # function
                     args, block = self._parse_func()
                     instr.append(AstNode('func', var_type, name, args, block))
-            else:
+            else:  # statement
                 instr.append(self._parse_statement())
         ast = AstNode(program, *instr)
         return ast
@@ -196,7 +196,7 @@ class Parser:
         return expr
 
     def _parse_factor(self):
-        if self.tokens.peek == 'id':  # function call or variable acess
+        if self.tokens.peek == 'id':  # function call or variable access
             next_token = self.tokens.next()
             if self.tokens.peek == '(':
                 args = self._parse_func_call()
