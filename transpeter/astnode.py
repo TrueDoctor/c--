@@ -2,27 +2,6 @@ class AstNode:
     def __init__(self, line):
         self.line = line
 
-    def print(self, prefix=''):  # prints the tree in a 'tree'-like manner
-        print(self.__class__.__name__)
-        size = len(self.__dict__)
-        for i, (k, v) in enumerate(self.__dict__.items()):
-            if k != "line":
-                print(prefix, end='')
-                if i == size - 1:
-                    print('\u2514\u2500', end='')
-                    new_prefix = prefix + '  '
-                else:
-                    print('\u251c\u2500', end='')
-                    new_prefix = prefix + '\u2502 '
-                print('{}: '.format(k), end='')
-                if isinstance(v, AstNode):
-                    v.print(new_prefix)
-                elif isinstance(v, list):
-                    print()
-                    pass
-                else:
-                    print(v)
-
 
 class Program(AstNode):
     def __init__(self, name, instructions):
