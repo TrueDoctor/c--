@@ -1,3 +1,5 @@
+from astnode import AstNode
+
 class Token:
     __slots__ = ['type', 'value', 'line']
 
@@ -16,19 +18,6 @@ class Token:
             return self.type == other
 
 
-class AstNode:
-   def __init__(self, name, *nodes):
-        self.name = name
-        self.nodes = nodes
-
-   def print(self, level=0):
-        print(self.name)
-        level += 1
-        for node in self.nodes:
-            print('\t' * level, end='')
-            node.print(level)
-
-
 class Peekable:
    __slots__ = ['gen', 'peek', 'eof']
 
@@ -43,17 +32,31 @@ class Peekable:
         return temp
 
 
-def print_tree(tree, prefix=""):
+def print_tree(tree, prefix=''):
     if isinstance(tree, AstNode):
-        print(tree.name)
-        size = len(tree.nodes)
-        for i in range(size):
-            print(prefix, end="")
+        print(tree.__class__.__name__)
+        size = len(vars(tree))
+        for i, (k, v) in enumerate(vars(tree).items()):
+            if k != 'line':
+                print(prefix, end='')
+                if i == size - 1:
+                    print('\u2514\u2500', end='')
+                    print('{}: '.format(k), end='')
+                    print_tree(v, prefix + '  ')
+                else:
+                    print('\u251c\u2500', end='')
+                    print('{}: '.format(k), end='')
+                    print_tree(v, prefix + '\u2502 ')
+    elif isinstance(tree, list):
+        print()
+        size = len(tree)
+        for i, node in enumerate(tree):
+            print(prefix, end='')
             if i == size - 1:
-                print("\u2514\u2500", end="")
-                print_tree(tree.nodes[i], prefix + "  ")
+                print('\u2514\u2500', end='')
+                print_tree(node, prefix + '  ')
             else:
-                print("\u251c\u2500", end="")
-                print_tree(tree.nodes[i], prefix + "\u2502 ")
+                print('\u251c\u2500', end='')
+                print_tree(node, prefix + '\u2502 ')
     else:
         print(tree)
