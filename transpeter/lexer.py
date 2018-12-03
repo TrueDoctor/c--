@@ -8,15 +8,15 @@ class LexerError(Exception):
 
 
 class Lexer:
-    separators = ['=', '+=', '-=', '*=', '/=', '%=', '{', '}', '(', ')', ';', ',']  # currently '=' etc is a separator
-    ops = ['+', '-', '*', '/', '%', '==', '!=', '>=', '<=', '>', '<', 'or', 'and', 'not']
+    ops = ['+=', '+', '-=', '-', '*=', '*', '/=', '/', '%=', '%', '==', '!=', '>=', '<=', '>', '<', 'or', 'and', 'not']
+    separators = ['=', '{', '}', '(', ')', ';', ',']
     types = ['void', 'int']
     control = ['if', 'else', 'while', 'for', 'return', 'inline']
 
     def __init__(self):
         regex = [
-            r'(?P<sep>{})'.format('|'.join(re.escape(i) for i in Lexer.separators)),
             r'(?P<op>{})'.format('|'.join(re.escape(i) for i in Lexer.ops)),
+            r'(?P<sep>{})'.format('|'.join(re.escape(i) for i in Lexer.separators)),
             r'(?P<int>[0-9]+|true|false)',
             r'\'(?P<char>.)\'',
             r'(?P<id>[a-zA-Z_][a-zA-Z0-9_]*)'
