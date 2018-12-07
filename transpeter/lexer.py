@@ -12,13 +12,14 @@ class Lexer:
     separators = ['=', '{', '}', '(', ')', ';', ',']
     types = ['void', 'int']
     control = ['if', 'else', 'while', 'for', 'return', 'inline']
+    escape = [r'\n', r'\r', r'\t', r'\b']
 
     def __init__(self):
         regex = [
             r'(?P<op>{})'.format('|'.join(re.escape(i) for i in Lexer.ops)),
             r'(?P<sep>{})'.format('|'.join(re.escape(i) for i in Lexer.separators)),
             r'(?P<int>[0-9]+|true|false)',
-            r'\'(?P<char>.)\'',
+            r'\'(?P<char>.|{})\''.format('|'.join(re.escape(i) for i in Lexer.escape)),
             r'(?P<id>[a-zA-Z_][a-zA-Z0-9_]*)'
         ]
         self.pattern = re.compile(r'\s*(?:{})'.format('|'.join(regex)))

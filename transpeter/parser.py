@@ -17,6 +17,8 @@ class Parser:
 
     def expect(self, value):
         token = self.tokens.next()
+        if token == Parser.EOF:
+            raise ParserError('unexpected EOF')
         if token != value:
             raise ParserError('line {}: expected \'{}\', got \'{}\''.format(token.line, value, token.value))
         return token
