@@ -19,7 +19,7 @@ class Parser:
         token = self.tokens.next()
         if token == Parser.EOF:
             raise ParserError('unexpected EOF')
-        if token != value:
+        elif token != value:
             raise ParserError('line {}: expected \'{}\', got \'{}\''.format(token.line, value, token.value))
         return token
 
@@ -147,7 +147,7 @@ class Parser:
             next_expr = self._parse_equality()
             expr = BinOp(line, 'and', expr, next_expr)
         return expr
-
+    
     def _parse_equality(self):
         expr = self._parse_relational()
         while self.tokens.peek in ('==', '!='):
