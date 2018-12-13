@@ -1,41 +1,78 @@
+import astnode as ast
+
+
+def not_yet_implemented():
+    raise CodeGenError('functions not yet implemented')
+
+
 class CodeGenError(Exception):
     pass
 
 
 class CodeGenerator:
     def __init__(self, ast):
-        self.ast = ast
         self.funcs = []
-        for node in ast.nodes:  # maybe change
-            if node.name == 'func':
-                self.funcs.append(node[1])
+        self.program = ast.Program(ast.name, [])
+        for node in ast.instr_list:
+            if isinstance(node, ast.Func):
+                self.funcs.append(node)
+            else:
+                self.program.instr_list.append(node)
         self.var_map = [{}]
         self.stack_ptr = 0
         self.base_ptr = [0]
 
     def generate(self):
-        code = '[{}]\n'.format(self.ast.name)  # header comment
-        for node in self.ast:
-            pass
+        code = '[{}]'.format(self.program.name)  # header comment
+        # TODO: check functions for duplicates
+        # TODO: check functions for recursion
+        if len(self.funcs) > 0:
+            not_yet_implemented()
+        for node in self.program:
+            # generate code
+            if isinstance(node, ast.Decl):
+                pass
+            elif isinstance(node, ast.Block):
+                pass
+            elif isinstance(node, ast.If):
+                pass
+            elif isinstance(node, ast.While):
+                pass
+            elif isinstance(node, ast.For):
+                pass
+            elif isinstance(node, ast.Return):
+                not_yet_implemented()
+            elif isinstance(node, ast.FuncCall):
+                not_yet_implemented()
+            else:
+                assert isinstance(node, ast.Assign)
+                pass
         return code
 
-    def _enter_scope(self, *parameters):
+    def enter_scope(self, *parameters):
         self.var_map.append({})
         for parameter in parameters:
-            pass
+            self.declare_var(parameter)
 
-    def _leave_scope(self):
+    def leave_scope(self):
         pass
 
-    def _declare_var(self, var):
+    def declare_var(self, var):
         pass
 
-    def _get_var(self, var):  # pseudocode
+    def get_var(self, name):  # pseudocode, should copy to temp location
         for scope in self.var_map:
-            if var in scope:
-                return scope[var]
+            if name in scope:
+                return scope[name]
         else:
-            raise CodeGenError('line {}: variable \'{}\' not declared'.format(var.line, var))
+            raise CodeGenError('line {}: variable \'{}\' not declared'.format(name.line, name))
 
-    def _eval_expr(self):
-        pass
+    def eval_expr(self, expression_tree):
+        if isinstance(expression_tree, ast.BinOp):
+            pass
+        elif isinstance(expression_tree, ast.UnOp):
+            pass
+        elif isinstance(expression_tree, ast.Var):
+            pass
+        else:  # literal
+            pass
