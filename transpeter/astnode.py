@@ -49,7 +49,7 @@ class While(AstNode):
         self.stmnt = statement
 
 
-class For(AstNode):
+class Repeat(AstNode):
     def __init__(self, line, cond, statement):
         super().__init__(line)
         self.cond = cond
