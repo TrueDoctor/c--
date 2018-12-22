@@ -1,8 +1,8 @@
-from utils import Peekable
+from utils import Peekable, CompilerError
 import astnode as ast
 
 
-class ParserError(Exception):
+class ParserError(CompilerError):
     pass
 
 
@@ -87,7 +87,7 @@ class Parser:
     def parse_statement(self):
         if self.tokens.peek == '{':  # block
             return self.parse_block()
-        elif self.tokens.peek in ('if', 'repeat', 'while'):  # for, while, if-else
+        elif self.tokens.peek in ('if', 'repeat', 'while'):  # repeat, while, if-else
             ctrl = self.tokens.next()
             line = ctrl.line
             self.expect('(')
@@ -125,6 +125,8 @@ class Parser:
                 expr = self.parse_expr()
                 self.expect(';')
                 return ast.Assign(name.line, assign_op, name.value, expr)
+            elif next_token == Parser.EOF:
+                raise ParserError('unexpected EOF')
             else:
                 raise ParserError('line {}: expected function call or assignment'.format(next_token.line))
         elif self.tokens.peek == Parser.EOF:
@@ -211,7 +213,7 @@ class Parser:
             raise ParserError('line {}: unexpected token: \'{}\''.format(self.tokens.peek.line, self.tokens.peek.value))
 
     def parse_func_call(self):  # returns no node, only the arguments
-        self.tokens.next()  # is '('
+        self.expect('(')
         args = []
         if self.tokens.peek != ')':
             args.append(self.parse_expr())
