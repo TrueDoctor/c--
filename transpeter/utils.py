@@ -1,5 +1,10 @@
 from astnode import AstNode
 
+
+class CompilerError(Exception):
+    pass
+
+
 class Token:
     __slots__ = ['type', 'value', 'line']
 
