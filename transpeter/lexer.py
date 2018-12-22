@@ -1,9 +1,9 @@
 import re
 
-from utils import Token
+from utils import Token, CompilerError
 
 
-class LexerError(Exception):
+class LexerError(CompilerError):
     pass
 
 
