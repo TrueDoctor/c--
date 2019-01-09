@@ -30,49 +30,90 @@ class CodeGenerator:
             not_yet_implemented()
         for node in self.program:
             # generate code
-            if isinstance(node, ast.Decl):
-                pass
-            elif isinstance(node, ast.Block):
-                pass
-            elif isinstance(node, ast.If):
-                pass
-            elif isinstance(node, ast.While):
-                pass
-            elif isinstance(node, ast.For):
-                pass
-            elif isinstance(node, ast.Return):
-                not_yet_implemented()
-            elif isinstance(node, ast.FuncCall):
-                not_yet_implemented()
-            else:
-                assert isinstance(node, ast.Assign)
-                pass
         return code
 
-    def enter_scope(self, *parameters):
-        self.var_map.append({})
-        for parameter in parameters:
-            self.declare_var(parameter)
-
-    def leave_scope(self):
-        pass
-
-    def declare_var(self, var):
-        pass
-
-    def get_var(self, name):  # pseudocode, should copy to temp location
-        for scope in self.var_map:
-            if name in scope:
-                return scope[name]
+    def gen_stmnt(self, tree):
+        if isinstance(tree, ast.Decl):
+            if tree.type == 'void':
+                raise CodeGenError(f'line: {tree.line}: variable \'{tree.name}\' declared void')
+            if tree.name in self.var_map[-1]:
+                raise CodeGenError(f'line: {tree.name}: variable \'{tree.name}\' already declared in same scope')
+            code = ''
+            if tree.init is not None:
+                code += self.eval_expr(tree.init)
+            self.var_map[-1][tree.name] = self.stack_ptr
+            self.stack_ptr += 1
+            return code + '>'
+        elif isinstance(tree, ast.Block):
+            self.var_map.append({})
+            code = ''
+            for stmnt in tree.stmnt_list:
+                code += self.gen_stmnt(stmnt)
+            return code
+        elif isinstance(tree, ast.If):
+            pass
+        elif isinstance(tree, ast.While):
+            pass
+        elif isinstance(tree, ast.For):
+            pass
+        elif isinstance(tree, ast.Return):
+            not_yet_implemented()
+        elif isinstance(tree, ast.FuncCall):
+            not_yet_implemented()
         else:
-            raise CodeGenError('line {}: variable \'{}\' not declared'.format(name.line, name))
+            assert isinstance(tree, ast.Assign)
+            name = tree.var
+            for scope in reversed(self.var_map):
+                if name in scope:
+                    addr = scope[name]
+                    break
+            else:
+                raise CodeGenError(f'line: {tree.line}: variable \'{name}\' not declared')
+            expr = eval_expr(expression_tree.expr)
+            rel_addr = self.stack_ptr - addr
+            if tree.op == '=':
+                pass
+            if tree.op == '+=':
+                pass
+            if tree.op == '-=':
+                pass
+            if tree.op == '*=':
+                pass
+            if tree.op == '/=':
+                pass
+            if tree.op == '%=':
+                pass
 
     def eval_expr(self, expression_tree):
         if isinstance(expression_tree, ast.BinOp):
+            left = eval_expr(expression_tree.left)
+            self.stack_ptr += 1
+            right = eval_expr(expression_tree.right)
+            self.stack_ptr -= 1
+            if expression_tree.op == '+':
+                return f'{left}>{right}[-<+>]<'
+            if expression_tree.op == '-':
+                return f'{left}>{right}[-<->]<'
+            # TODO: *, /, %
             pass
         elif isinstance(expression_tree, ast.UnOp):
-            pass
+            if expression_tree.op == '+':
+                return  eval_expr(expression_tree.right)
+            if expression_tree.op == '-':
+                self.stack_ptr += 1
+                right = eval_expr(expression_tree.right)
+                self.stack_ptr -= 1
+                return f'[-]>{right}[-<->]<'
         elif isinstance(expression_tree, ast.Var):
-            pass
+            name = expression_tree.name
+            for scope in reversed(self.var_map):
+                if name in scope:
+                    addr = scope[name]
+                    break
+            else:
+                raise CodeGenError(f'line: {expression_tree.line}: variable \'{name}\' not declared)
+            rel_addr = self.stack_ptr - addr
+            return '{0}[-{1}>+<{0}]{1}>[-<+{0}+{1}>]<'.format('<' * rel_pos, '>' * rel_pos)
         else:  # literal
-            pass
+            assert isinstance(expression_tree, ast.Int)
+            return '[-]' + '+' * expression_tree.value
