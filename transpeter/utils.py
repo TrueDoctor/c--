@@ -24,14 +24,14 @@ class Token:
 
 
 class Peekable:
-   __slots__ = ['gen', 'peek', 'eof']
+    __slots__ = ['gen', 'peek', 'eof']
 
-   def __init__(self, generator, eof=None):
+    def __init__(self, generator, eof=None):
         self.gen = generator
         self.peek = next(generator, eof)
         self.eof = eof
 
-   def next(self):
+    def next(self):
         temp = self.peek
         self.peek = next(self.gen, self.eof)
         return temp
