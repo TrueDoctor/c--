@@ -35,9 +35,9 @@ class CodeGenerator:
     def gen_stmnt(self, tree):
         if isinstance(tree, ast.Decl):
             if tree.type == 'void':
-                raise CodeGenError(f'line: {tree.line}: variable \'{tree.name}\' declared void')
+                raise CodeGenError(f'line {tree.line}: variable \'{tree.name}\' declared void')
             if tree.name in self.var_map[-1]:
-                raise CodeGenError(f'line: {tree.name}: variable \'{tree.name}\' already declared in same scope')
+                raise CodeGenError(f'line {tree.name}: variable \'{tree.name}\' already declared in same scope')
             code = ''
             if tree.init is not None:
                 code += self.eval_expr(tree.init)
@@ -68,7 +68,7 @@ class CodeGenerator:
                     addr = scope[name]
                     break
             else:
-                raise CodeGenError(f'line: {tree.line}: variable \'{name}\' not declared')
+                raise CodeGenError(f'line {tree.line}: variable \'{name}\' not declared')
             expr = eval_expr(expression_tree.expr)
             rel_addr = self.stack_ptr - addr
             if tree.op == '=':
@@ -111,7 +111,7 @@ class CodeGenerator:
                     addr = scope[name]
                     break
             else:
-                raise CodeGenError(f'line: {expression_tree.line}: variable \'{name}\' not declared)
+                raise CodeGenError(f'line {expression_tree.line}: variable \'{name}\' not declared)
             rel_addr = self.stack_ptr - addr
             return '{0}[-{1}>+<{0}]{1}>[-<+{0}+{1}>]<'.format('<' * rel_pos, '>' * rel_pos)
         else:  # literal
