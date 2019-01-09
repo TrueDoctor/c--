@@ -38,7 +38,7 @@ class CodeGenerator:
             if tree.type == 'void':
                 raise CodeGenError(f'line {tree.line}: variable \'{tree.name}\' declared void')
             if tree.name in self.var_map[-1]:
-                raise CodeGenError(f'line {tree.name}: variable \'{tree.name}\' already declared in same scope')
+                raise CodeGenError(f'line {tree.line}: variable \'{tree.name}\' already declared in same scope')
             code = ''
             if tree.init is not None:
                 code += self.eval_expr(tree.init)
