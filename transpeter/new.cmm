@@ -1,0 +1,15 @@
+# this is a comment
+int myVar = 5;
+
+void main(int arg) {
+    if (arg % 2 == 1) {
+        for (10) {
+            int i;
+            i = 20 * 3 or 5 - not 3;
+            {
+                main();
+            }
+        }
+        inline [bc-.];
+    }
+}
