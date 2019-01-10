@@ -9,6 +9,7 @@
 *.ipch
 transpeter/.idea/
 transpeter/__pycache__
+inter-fuck
 
 # outputs from the Nix package manager
 result
