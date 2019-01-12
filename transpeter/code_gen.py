@@ -78,10 +78,10 @@ class CodeGenerator:
                 return '{2}[-{0}+{1}]'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '-=':
                 return '{2}[-{0}-{1}]'.format('<' * rel_addr, '>' * rel_addr, expr)
-            if tree.op == '-=':
-                pass
+            if tree.op == '+=':
+                return '{2}[+{0}-{1}]'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '*=':
-                pass
+                return '{2}>[-]>[-]<<{0}[-{1}>>+<<{0}]{1}>>[<<[{0}+{1}>+<-]>[<+>-]>-]<[-]<[-]'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '/=':
                 pass
             if tree.op == '%=':
