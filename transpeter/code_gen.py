@@ -59,10 +59,8 @@ class CodeGenerator:
             pass
         elif isinstance(tree, ast.While):
             expr = self.eval_expr(tree.cond)
-            self.stack_ptr += 1
             stmnt = self.gen_stmnt(tree.stmnt)
-            self.stack_ptr -= 1
-            return f'{expr}[>{stmnt}<{expr}]'
+            return f'{expr}[{stmnt}{expr}]'
         elif isinstance(tree, ast.Repeat):
             expr = self.eval_expr(tree.cond)
             self.stack_ptr += 1
