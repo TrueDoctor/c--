@@ -34,7 +34,7 @@ class CodeGenerator:
         self.stack_ptr = 0
         for func in self.funcs:
             if self.check_recursion(func.name, func.block.stmnt_list):
-                raise CodeGenError('line {func.line}: recursion in function \'func.name\'')
+                raise CodeGenError(f'line {func.line}: recursion in function \'func.name\'')
 
     def check_recursion(self, name, tree):
         for node in tree:
