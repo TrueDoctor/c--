@@ -5,6 +5,12 @@ import astnode as ast
 def not_yet_implemented():
     raise CodeGenError('functions not yet implemented')
 
+def check_recursion(name, tree):
+    for node in tree:
+        if isinstance(node, ast.FuncCall):
+            if node.name == name:
+                return true
+            return check_recursion(node)
 
 class CodeGenError(CompilerError):
     pass
@@ -12,21 +18,48 @@ class CodeGenError(CompilerError):
 
 class CodeGenerator:
     def __init__(self, tree):
+        self.current_func = None
         self.funcs = []
         self.program = ast.Program(tree.name, [])
+        self.func_map = {}
         for node in tree.instr_list:
             if isinstance(node, ast.Func):
+                if node.name in self.func_map:
+                    raise CodeGenError(f'line {node.line}: function \'{node.name}\' defined twice')
+                self.func_map[node.name] = len(node.block.stmnt_list)
                 self.funcs.append(node)
             else:
                 self.program.instr_list.append(node)
         self.var_map = [{}]
         self.stack_ptr = 0
+        for func in self.funcs:
+            if self.check_recursion(func.name, func.block.stmnt_list):
+                raise CodeGenError('line {func.line}: recursion in function \'func.name\'')
+
+    def check_recursion(self, name, tree):
+        for node in tree:
+            if isinstance(node, ast.FuncCall):
+                if node.name == name:
+                    return True
+                for func in self.funcs:
+                    if func.name == node.name:
+                        next_func = func
+                        break
+                else:
+                    raise CodeGenError(f'line {node.line}: function \'{node.name}\' is not defined')
+                return self.check_recursion(name, next_func.block.stmnt_list)
+            elif isinstance(node, ast.Block):
+                for stmnt in node.stmnt_list:
+                    if self.check_recursion(name, node.stmnt_list):
+                        return True
+                return False
+            else:
+                for attr in vars(node):
+                    if isinstance(attr, ast.AstNode):
+                        return self.check_recursion(name, node)
+        return False
 
     def generate(self, n=80):
-        # TODO: check functions for duplicates
-        # TODO: check functions for recursion
-        if len(self.funcs) > 0:
-            not_yet_implemented()
         code = ''
         for node in self.program.instr_list:
             code += self.gen_stmnt(node)
@@ -71,7 +104,9 @@ class CodeGenerator:
         elif isinstance(tree, ast.Return):
             not_yet_implemented()
         elif isinstance(tree, ast.FuncCall):
-            not_yet_implemented()
+            if tree.name not in self.func_map:
+                raise CodeGenError('line {tree.line}: function \'{tree.name}\' not defined')
+            # TODO
         else:
             assert isinstance(tree, ast.Assign)
             name = tree.var
