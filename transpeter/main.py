@@ -1,4 +1,5 @@
 import sys
+from argparse import ArgumentParser
 
 from lexer import Lexer
 from parser import Parser
@@ -6,10 +7,18 @@ from code_gen import CodeGenerator
 from utils import print_tree, CompilerError
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        sys.exit('Error: no input file specified')
-    with open(sys.argv[1], 'r') as cmm_file:
-        code = cmm_file.read()
+    parser = ArgumentParser()
+    parser.add_argument('-d', '--debug', help='prints stack trace for errors', action='store_true')
+    parser.add_argument('-t', '--tree', help='prints the abstract syntax tree', action='store_true')
+    parser.add_argument('src', help='source file')
+    parser.add_argument('dest', help='destination file', nargs='?', default=None)
+    args = parser.parse_args()
+    try:
+        with open(args.src) as cmm_file:
+            code = cmm_file.read()
+    except FileNotFoundError:
+        print('specified input file does not exist', file=sys.stderr)
+        sys.exit(parser.format_usage())
     try:
         lex = Lexer()
         tokens = lex.tokenize(code)
@@ -17,8 +26,16 @@ if __name__ == "__main__":
         tree = parser.parse(sys.argv[1])
         code_generator = CodeGenerator(tree)
         code = code_generator.generate()
-        print_tree(tree)
-        print()
-        print(code)
+        if args.tree:
+            print_tree(tree)
+            if args.dest is None:
+                print()
+        if args.dest is not None:
+            with open(args.dest, 'w') as out_file:
+                out_file.write(code)
+        else:
+            print(code)
     except CompilerError as e:
+        if args.debug:
+            raise e
         sys.exit(e)
