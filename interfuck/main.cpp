@@ -282,7 +282,6 @@ i32 main(i32 argc, cstr argv[]) {
 
 	BfOptimizer optimizer(BfRawCode((cstr)buf, (u32)size));
 	BfOptCode code = optimizer.optimize();
-	// code.print();
 
 	delete[] buf;
 
