@@ -7,9 +7,17 @@
 /interfuck/x64
 *.diagsession
 *.ipch
+
+# transfuck
 transpeter/.idea/
 transpeter/__pycache__
+
+# exclude output files
 inter-fuck
+transpeter/*.out
+
+# exclude source files
+*.cmm
 
 # outputs from the Nix package manager
 result
