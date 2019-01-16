@@ -19,10 +19,7 @@ using usize = size_t; using cstr = char*;
 
 using ucell = u32; using icell = i64;
 
-void print_help() {
-	puts("usage:");
-	puts("interfuck [filename]");
-}
+static bool show_warnings = true;
 
 enum class BfInstrCode : u32 {
 	nop, add, shift, set, jump, zstore, load, relset, print, getchr,
@@ -190,7 +187,7 @@ struct BfOptimizer {
 						if (c.jump.zero) break;
 						auto iter = multiplier.find(0);
 						if (iter == multiplier.end()) break;
-						if (!iter->second.reset && iter->second.change_value == 0) puts("warning: infinite loop detected");
+						if (!iter->second.reset && iter->second.change_value == 0 && show_warnings) puts("warning: infinite loop detected");
 						if (iter->second.reset || iter->second.change_value != -1) break;
 						u32 n = i;
 						code[++n] = BfInstr::Zstore();
@@ -254,43 +251,132 @@ struct BfRunner {
 	}
 };
 
+u8 *read_file(const char *path, usize *size) {
+	auto file = fopen(path, "rb");
+	if (!file) return nullptr;
+
+	fseek(file, 0, SEEK_END);
+	*size = (usize)ftell(file);
+	rewind(file);
+	*size -= ftell(file);
+
+	u8 *buffer = new u8[*size];
+
+	i32 obtained = fread(buffer, *size, 1, file);
+	fclose(file);
+
+	return obtained == 1 ? buffer : nullptr;
+}
+
+// Check if `a` contains `b` at the beginning
+bool begins_with(const char *a, const char *b) {
+	if (a == b) return true;
+	if (a == nullptr || b == nullptr) return false;
+	for (const char *i = b, *j = a; ; i++, j++) {
+		if (!*i) return true;
+		if (*i != *j) return false;
+	}
+	// This should NEVER be reached!
+}
+
+struct CommandLineArguments {
+	bool help = false;
+	bool version = false;
+	bool debug = false;
+	bool time = false;
+	bool warnings = true;
+	cstr filename = nullptr;
+};
+
+void print_help() {
+	puts("usage:");
+	puts("interfuck [filename]");
+}
+
+void print_version() {
+	puts("you really expected versioning dude?! fockin' 1.0 lol");
+}
+
 i32 main(i32 argc, cstr argv[]) {
-	if (argc <= 1) {
-		puts("error: needing at least one argument");
-		print_help();
-		return -1;
+	CommandLineArguments args;
+
+	for (u32 i = 0; i < argc; i++) {
+		cstr arg = argv[i];
+		switch (*arg) {
+			case 0: continue;
+			case '-': break;
+			default: args.filename = arg;
+					 continue;
+		}
+		if (*++arg == '-') {
+			arg++;
+			if (begins_with(arg, "help")) args.help = true;
+			else if (begins_with(arg, "version")) args.version = true;
+			else if (begins_with(arg, "debug")) args.debug = true;
+			else if (begins_with(arg, "time")) args.time = true;
+			else if (begins_with(arg, "no-warning")) args.warnings = false;
+			else printf("warning: argument '--%s' is unknown; skipping argument\n", arg);
+		} else {
+			do {
+				switch (*arg) {
+					case 'h':
+						args.help = true;
+						break;
+					case 'v':
+						args.version = true;
+						break;
+					case 'd':
+						args.debug = true;
+						break;
+					case 't':
+						args.time = true;
+						break;
+					case 'w':
+						args.warnings = false;
+					default:
+						printf("warning: argument '-%c' is unknown; skipping argument\n", *arg);
+				}
+			} while (*++arg);
+		}
 	}
 
-	if (strcmp(argv[1], "--help") == 0) {
+	show_warnings = args.warnings;
+
+	if (args.help) {
 		print_help();
 		return 0;
 	}
 
-	ifstream file (argv[1]);
-	if (!file.is_open()) {
-		printf("error: could not open file '%s'\n", argv[1]);
+	if (args.version) {
+		print_version();
+		return 0;
+	}
+
+   	if (args.debug) {
+		puts("doin som NIY shyt");
+	}
+
+	if (!args.filename || !*args.filename) {
+		puts("error: needing an input file");
 		return -1;
 	}
 
-	file.seekg (0, file.end);
-	int size = file.tellg();
-	file.seekg (0, file.beg);
+	usize size = 0;
+	u8 *content = read_file(args.filename, &size);
 
-	char *buf = new char[size];
-	file.read(buf, size);
-	file.close();
-
-	BfOptimizer optimizer(BfRawCode((cstr)buf, (u32)size));
+	BfOptimizer optimizer(BfRawCode((cstr)content, (u32)size));
 	BfOptCode code = optimizer.optimize();
 
-	delete[] buf;
+	delete[] content;
 
 	BfRunner runner(code);
 
-	auto t0 = chrono::high_resolution_clock::now();
-	runner.run();
-	auto dt = chrono::high_resolution_clock::now() - t0;
-	printf("---\nthe code took %llims", chrono::duration_cast<chrono::milliseconds>(dt).count());
+	if (args.time) {
+		auto t0 = chrono::high_resolution_clock::now();
+		runner.run();
+		auto dt = chrono::high_resolution_clock::now() - t0;
+		printf("---\nthe code took %llims\n", chrono::duration_cast<chrono::milliseconds>(dt).count());
+	} else runner.run();
 
 	return 0;
 }
