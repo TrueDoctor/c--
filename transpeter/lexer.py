@@ -26,7 +26,7 @@ class Lexer:
         self.inline = re.compile(r'((?:.|\s)*?);')
 
     def tokenize(self, program):
-        program = re.sub(r'#.*', '', program.rstrip())
+        program = re.sub(r'#.*', '', program).rstrip()
         pos = 0
         line = 1
         size = len(program)
