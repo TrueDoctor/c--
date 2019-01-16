@@ -1,0 +1,19 @@
+# expression:    expected result: 
+int a = 5 == 5;  # 1
+int b = 1 == 5;  # 0
+
+int c = 5 != 5;  # 0
+int d = 1 != 5;  # 1
+
+int e = 0 or 0;  # 0
+int f = 5 or 0;  # 1
+int g = 0 or 42;  # 1
+int h = 5 or 42;  # 1
+
+int i = 0 and 0;  # 0
+int j = 5 and 0;  # 0
+int k = 0 and 42;  # 0
+int l = 5 and 42;  # 1
+
+int m = not 0;  # 1
+int n = not 42;  # 0

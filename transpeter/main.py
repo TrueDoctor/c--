@@ -1,4 +1,5 @@
 import sys
+import os.path
 from argparse import ArgumentParser
 
 from lexer import Lexer
@@ -16,14 +17,14 @@ if __name__ == "__main__":
     try:
         with open(args.src) as cmm_file:
             code = cmm_file.read()
-    except FileNotFoundError:
-        print('specified input file does not exist', file=sys.stderr)
+    except OSError as e:
+        print(e, file=sys.stderr)
         sys.exit(parser.format_usage())
     try:
         lex = Lexer()
         tokens = lex.tokenize(code)
         parser = Parser(tokens)
-        tree = parser.parse(sys.argv[1])
+        tree = parser.parse(os.path.basename(args.src))
         code_generator = CodeGenerator(tree)
         code = code_generator.generate()
         if args.tree:

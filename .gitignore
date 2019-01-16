@@ -18,6 +18,7 @@ transpeter/*.out
 
 # exclude source files
 *.cmm
+*/*.cmm
 
 # outputs from the Nix package manager
 result
