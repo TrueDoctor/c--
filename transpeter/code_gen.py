@@ -121,13 +121,13 @@ class CodeGenerator:
             if expression_tree.op == '>=':
                 pass
             if expression_tree.op == "==":
-                pass
+                return f'{left}>{right}<[->-<]+>[<->[-]]<'
             if expression_tree.op == '!=':
-                return f'{left}>{right}[-<->][<[-]+>[-]]<'
+                return f'{left}>{right}<[->-<]>[<+>[-]]<'
             if expression_tree.op == 'or':
-                pass
+                return f'{left}>{right}>[-]<<[>>+<<[-]]>[>[-]+<[-]]>[-<<+>>]<<'
             if expression_tree.op == 'and':
-                pass
+                return f'{left}>{right}>[-]<[<[>>+<<[-]]>[-]]<[-]>>[-<<+>>]<<'
         elif isinstance(expression_tree, ast.UnOp):
             if expression_tree.op == '+':
                 return self.eval_expr(expression_tree.right)
@@ -137,7 +137,10 @@ class CodeGenerator:
                 self.stack_ptr -= 1
                 return f'[-]>{right}[-<->]<'
             if expression_tree.op == 'not':
-                return f'{self.eval_expr(expression_tree.right)}[[-]+>[-]]<'  # TODO: this is bool
+                self.stack_ptr += 1
+                expr = self.eval_expr(expression_tree.right)
+                self.stack_ptr -= 1
+                return f'[-]+>{expr}[<->[-]]<'
         elif isinstance(expression_tree, ast.Var):
             name = expression_tree.name
             for scope in reversed(self.var_map):
