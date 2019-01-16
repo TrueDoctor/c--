@@ -90,7 +90,7 @@ class CodeGenerator:
             if tree.op == '-=':
                 return '{2}[-{0}-{1}]'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '*=':
-                return '{2}>[-]>[-]<<{0}[-{1}>>+<<{0}]{1}>>[<<[{0}+{1}>+<-]>[<+>-]>-]<[-]<[-]'.format('<' * rel_addr, '>' * rel_addr, expr)
+                return '{2}>[-]>[-]<<{0}[-{1}>>+<<{0}]{1}>>[<<[{0}+{1}>+<-]>[<+>-]>-]<<'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '/=':
                 pass
             if tree.op == '%=':
@@ -107,7 +107,7 @@ class CodeGenerator:
             if expression_tree.op == '-':
                 return f'{left}>{right}[-<->]<'
             if expression_tree.op == '*':
-                pass
+                return f'{left}>{right}>[-]>[-]<<<[->>>+<<<]>>>[<<[<+>>+<-]>[<+>-]>-]<<<'
             if expression_tree.op == '/':
                 pass
             if expression_tree.op == '%':
@@ -120,10 +120,10 @@ class CodeGenerator:
                 pass
             if expression_tree.op == '>=':
                 pass
-            if expression_tree.op == '==':
-                return f'{left}>{right}[-<->]<[[-]+>[-]]<'
-            if expression_tree.op == '!=':
+            if expression_tree.op == "==":
                 pass
+            if expression_tree.op == '!=':
+                return f'{left}>{right}[-<->][<[-]+>[-]]<'
             if expression_tree.op == 'or':
                 pass
             if expression_tree.op == 'and':
@@ -137,7 +137,7 @@ class CodeGenerator:
                 self.stack_ptr -= 1
                 return f'[-]>{right}[-<->]<'
             if expression_tree.op == 'not':
-                return f'{self.eval_expr(expression_tree.right)}[[-]+>[-]]<'
+                return f'{self.eval_expr(expression_tree.right)}[[-]+>[-]]<'  # TODO: this is bool
         elif isinstance(expression_tree, ast.Var):
             name = expression_tree.name
             for scope in reversed(self.var_map):
@@ -147,7 +147,7 @@ class CodeGenerator:
             else:
                 raise CodeGenError(f'line {expression_tree.line}: variable \'{name}\' not declared')
             rel_addr = self.stack_ptr - addr
-            return '{0}[-{1}>+<{0}]{1}>[-<+{0}+{1}>]<'.format('<' * rel_addr, '>' * rel_addr)
+            return '[-]>[-]<{0}[-{1}>+<{0}]{1}>[-<+{0}+{1}>]<'.format('<' * rel_addr, '>' * rel_addr)
         else:  # literal
             assert isinstance(expression_tree, ast.Int)
             return '[-]' + '+' * expression_tree.value
