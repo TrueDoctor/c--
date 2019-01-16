@@ -300,7 +300,7 @@ void print_version() {
 i32 main(i32 argc, cstr argv[]) {
 	CommandLineArguments args;
 
-	for (u32 i = 0; i < argc; i++) {
+	for (u32 i = 1; i < argc; i++) {
 		cstr arg = argv[i];
 		switch (*arg) {
 			case 0: continue;
@@ -333,6 +333,7 @@ i32 main(i32 argc, cstr argv[]) {
 						break;
 					case 'w':
 						args.warnings = false;
+						break;
 					default:
 						printf("warning: argument '-%c' is unknown; skipping argument\n", *arg);
 				}
