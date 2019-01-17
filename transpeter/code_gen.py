@@ -19,19 +19,18 @@ class CodeGenError(CompilerError):
 class CodeGenerator:
     def __init__(self, tree):
         self.current_func = None
-        self.funcs = []
+        self.funcs = {}
         self.program = ast.Program(tree.name, [])
-        self.func_map = {}
         for node in tree.instr_list:
             if isinstance(node, ast.Func):
-                if node.name in self.func_map:
+                if node.name in self.funcs:
                     raise CodeGenError(f'line {node.line}: function \'{node.name}\' defined twice')
-                self.func_map[node.name] = len(node.block.stmnt_list)
-                self.funcs.append(node)
+                self.funcs[node.name] = node
             else:
                 self.program.instr_list.append(node)
         self.var_map = [{}]
         self.stack_ptr = 0
+        # vvv might change
         for func in self.funcs:
             if self.check_recursion(func.name, func.block.stmnt_list):
                 raise CodeGenError(f'line {func.line}: recursion in function \'func.name\'')
@@ -106,7 +105,8 @@ class CodeGenerator:
         elif isinstance(tree, ast.FuncCall):
             if tree.name not in self.func_map:
                 raise CodeGenError('line {tree.line}: function \'{tree.name}\' not defined')
-            # TODO
+            func = self.funcs[tree.name]
+            pass
         else:
             assert isinstance(tree, ast.Assign)
             name = tree.var
@@ -176,6 +176,14 @@ class CodeGenerator:
                 expr = self.eval_expr(expression_tree.right)
                 self.stack_ptr -= 1
                 return f'[-]+>{expr}[<->[-]]<'
+        elif isinstance(expression_tree, ast.FuncCall):
+            if expression_tree.name not in self.funcs:
+                raise CodeGenError('line {expression_tree.line}: function \'{expression_tree.name}\' not defined')
+            func = self.funcs[expression_tree.name]
+            if func.type == 'void':
+                raise CodeGenError('line {expression_tree.line}: function \'{expression_tree.name}\' returns void')
+            parameters = len(func.arg_list)
+            arguments = len(expression_tree.args)
         elif isinstance(expression_tree, ast.Var):
             name = expression_tree.name
             for scope in reversed(self.var_map):
@@ -189,3 +197,12 @@ class CodeGenerator:
         else:  # literal
             assert isinstance(expression_tree, ast.Int)
             return '[-]' + '+' * expression_tree.value
+
+    def inline_function(self, node, expr=False):
+        if node.name not in self.funcs:
+            raise CodeGenError('line {node.line}: function \'{node.name}\' not defined')
+        func = self.funcs[node.name]
+        if expr and func.type == 'void':
+            raise CodeGenError('line {node.line}: function \'{node.name}\' returns void')
+        parameters = len(func.arg_list)
+        arguments = len(expression_tree.args)
