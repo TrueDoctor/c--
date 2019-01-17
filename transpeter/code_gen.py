@@ -104,7 +104,7 @@ class CodeGenerator:
             not_yet_implemented()
         elif isinstance(tree, ast.FuncCall):
             if tree.name not in self.func_map:
-                raise CodeGenError('line {tree.line}: function \'{tree.name}\' not defined')
+                raise CodeGenError(f'line {tree.line}: function \'{tree.name}\' not defined')
             func = self.funcs[tree.name]
             pass
         else:
@@ -178,10 +178,10 @@ class CodeGenerator:
                 return f'[-]+>{expr}[<->[-]]<'
         elif isinstance(expression_tree, ast.FuncCall):
             if expression_tree.name not in self.funcs:
-                raise CodeGenError('line {expression_tree.line}: function \'{expression_tree.name}\' not defined')
+                raise CodeGenError(f'line {expression_tree.line}: function \'{expression_tree.name}\' not defined')
             func = self.funcs[expression_tree.name]
             if func.type == 'void':
-                raise CodeGenError('line {expression_tree.line}: function \'{expression_tree.name}\' returns void')
+                raise CodeGenError(f'line {expression_tree.line}: function \'{expression_tree.name}\' returns void')
             parameters = len(func.arg_list)
             arguments = len(expression_tree.args)
         elif isinstance(expression_tree, ast.Var):
@@ -199,10 +199,23 @@ class CodeGenerator:
             return '[-]' + '+' * expression_tree.value
 
     def inline_function(self, node, expr=False):
+        # check for errors
         if node.name not in self.funcs:
-            raise CodeGenError('line {node.line}: function \'{node.name}\' not defined')
+            raise CodeGenError(f'line {node.line}: function \'{node.name}\' not defined')
         func = self.funcs[node.name]
         if expr and func.type == 'void':
-            raise CodeGenError('line {node.line}: function \'{node.name}\' returns void')
-        parameters = len(func.arg_list)
-        arguments = len(expression_tree.args)
+            raise CodeGenError(f'line {node.line}: function \'{node.name}\' returns void')
+        parameters = len(func.args)
+        arguments = len(node.arg_list)
+        if paramters != arguments:
+            raise CodeGenError(f'line {node.line}: function \'{node.name}\' needs {parameters} arguments, got {arguments}')
+        # evaluate function inline
+        old_var_map = self.var_map
+        self.var_map = [{}]
+        code = ''
+        # TODO: add arguments, test for return
+        for decl in func.args:
+            code += self.gen_stmnt(decl)
+        for stmnt in func.block.stmnt_list:
+            code += self.gen_stmnt(stmnt)
+        return code
