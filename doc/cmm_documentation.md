@@ -17,8 +17,9 @@ Expressions in C-- are similar to C expressions, but with less operators. Note t
 Operator Precedence:
 
 1. ()         function call
-2. + -        unary plus/minus
-3. * / %      multiplication, division, remainder
+2. \+ \-      unary plus/minus
+3. \* / %     multiplication, division, remainder
+4. + -        addition, subtraction
 4. < > <= >=  relational
 5. == !=      relational
 6. not        logical not
