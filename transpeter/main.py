@@ -1,5 +1,6 @@
 import sys
 import os.path
+import re
 from argparse import ArgumentParser
 
 from lexer import Lexer
@@ -11,6 +12,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('-d', '--debug', help='prints stack trace for errors', action='store_true')
     parser.add_argument('-t', '--tree', help='prints the abstract syntax tree', action='store_true')
+    parser.add_argument('-o', '--optimize', help='optimizes the emitted code', action='store_true')
     parser.add_argument('src', help='source file')
     parser.add_argument('dest', help='destination file', nargs='?', default=None)
     args = parser.parse_args()
@@ -24,9 +26,9 @@ if __name__ == "__main__":
         lex = Lexer()
         tokens = lex.tokenize(code)
         parser = Parser(tokens)
-        tree = parser.parse(os.path.basename(args.src))
+        tree = parser.parse(os.path.basename(args.src)
         code_generator = CodeGenerator(tree)
-        code = code_generator.generate()
+        code = code_generator.generate(optimize=args.optimize)
         if args.tree:
             print_tree(tree)
             if args.dest is None:
