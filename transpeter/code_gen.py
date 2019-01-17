@@ -31,7 +31,7 @@ class CodeGenerator:
         for node in self.program.instr_list:
             code += self.gen_stmnt(node)
         code = '\n'.join([code[i:i+n] for i in range(0, len(code), n)])
-        return f'[{self.program.name}]\n' + code
+        return code
 
     def gen_stmnt(self, tree):
         if isinstance(tree, ast.Decl):
