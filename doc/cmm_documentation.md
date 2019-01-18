@@ -16,15 +16,15 @@ Expressions in C-- are similar to C expressions, but with less operators. Note t
 
 Operator Precedence:
 
-1. ()         function call
-2. \+ \-      unary plus/minus
-3. \* / %     multiplication, division, remainder
-4. + -        addition, subtraction
-4. < > <= >=  relational
-5. == !=      relational
-6. not        logical not
-7. and        logical and
-8. or         logical or
+  1. ()         function call
+  2. \+ \-      unary plus/minus
+  3. \* / %     multiplication, division, remainder
+  4. \+ \-        addition, subtraction
+  5. < > <= >=  relational
+  6. == !=      relational
+  7. not        logical not
+  8. and        logical and
+  9. or         logical or
 
 Note: Function calls in expressions must return int.
 

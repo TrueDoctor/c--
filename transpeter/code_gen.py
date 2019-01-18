@@ -1,3 +1,5 @@
+import re
+
 from utils import CompilerError
 import astnode as ast
 
@@ -58,12 +60,19 @@ class CodeGenerator:
                         return self.check_recursion(name, node)
         return False
 
-    def generate(self, n=80):
+    def generate(self, optimize=False, n=80):
+        # TODO: check functions for duplicates
+        # TODO: check functions for recursion
+        if len(self.funcs) > 0:
+            not_yet_implemented()
         code = ''
         for node in self.program.instr_list:
             code += self.gen_stmnt(node)
         code = '\n'.join([code[i:i+n] for i in range(0, len(code), n)])
-        return f'[{self.program.name}]\n' + code
+        if optimize:
+            while re.search(r'\+-|-\+|<>|><', code):
+                code = re.sub(r'\+-|-\+|<>|><', '', code)
+        return f'[{self.program.name}]\n{code}'
 
     def gen_stmnt(self, tree):
         if isinstance(tree, ast.Decl):
