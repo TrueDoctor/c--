@@ -1,5 +1,15 @@
-int main() {
-    return 3;
+void print(int arg) {
+    inline <.>;
 }
 
-int a = main();
+print(42);
+
+int a(int arg1, int arg2) {
+    return arg1 + arg2;
+}
+
+int b(int number) {
+    return a(number, 5);
+}
+
+print(b(86));

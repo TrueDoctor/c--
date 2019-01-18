@@ -1,8 +1,10 @@
 # check cyclic recursion
 int foo() {
-    return bar();
+    bar();
+    # return bar();
 }
 
 int bar() {
-    return foo();
+    foo();
+    # return foo();
 }

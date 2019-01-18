@@ -1,4 +1,4 @@
 # check simple recursion
 int main() {
-    return main();
+    return main(); 
 }

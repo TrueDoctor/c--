@@ -25,7 +25,7 @@ if __name__ == "__main__":
         lex = Lexer()
         tokens = lex.tokenize(code)
         parser = Parser(tokens)
-        tree = parser.parse(os.path.basename(args.src)
+        tree = parser.parse(os.path.basename(args.src))
         code_generator = CodeGenerator(tree)
         code = code_generator.generate(optimize=args.optimize)
         if args.tree:
