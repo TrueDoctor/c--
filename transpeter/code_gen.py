@@ -1,4 +1,4 @@
-from utils import CompilerError
+from utils import CompilerError, Function
 import astnode as ast
 
 
@@ -18,48 +18,24 @@ class CodeGenError(CompilerError):
 
 class CodeGenerator:
     def __init__(self, tree):
-        self.current_func = None
+        self.current_funcs = []
         self.funcs = {}
         self.program = ast.Program(tree.name, [])
         for node in tree.instr_list:
             if isinstance(node, ast.Func):
                 if node.name in self.funcs:
                     raise CodeGenError(f'line {node.line}: function \'{node.name}\' defined twice')
-                self.funcs[node.name] = node
+                self.funcs[node.name] = Function(node)
             else:
                 self.program.instr_list.append(node)
         self.var_map = [{}]
         self.stack_ptr = 0
-        # vvv might change
-        for func in self.funcs.values():
-            if self.check_recursion(func.name, func.block.stmnt_list):
-                raise CodeGenError(f'line {func.line}: recursion in function \'func.name\'')
-
-    def check_recursion(self, name, tree):
-        for node in tree:
-            if isinstance(node, ast.FuncCall):
-                if node.name == name:
-                    return True
-                for func in self.funcs:
-                    if func.name == node.name:
-                        next_func = func
-                        break
-                else:
-                    raise CodeGenError(f'line {node.line}: function \'{node.name}\' is not defined')
-                return self.check_recursion(name, next_func.block.stmnt_list)
-            elif isinstance(node, ast.Block):
-                for stmnt in node.stmnt_list:
-                    if self.check_recursion(name, node.stmnt_list):
-                        return True
-                return False
-            else:
-                for attr in vars(node):
-                    if isinstance(attr, ast.AstNode):
-                        return self.check_recursion(name, node)
-        return False
 
     def generate(self, n=80):
         code = ''
+        for func in self.funcs.values():
+            if func.code is None:
+                func.code = self.inline_function(func.node)
         for node in self.program.instr_list:
             code += self.gen_stmnt(node)
         code = '\n'.join([code[i:i+n] for i in range(0, len(code), n)])
@@ -183,7 +159,7 @@ class CodeGenerator:
             if func.type == 'void':
                 raise CodeGenError('line {expression_tree.line}: function \'{expression_tree.name}\' returns void')
             parameters = len(func.args)
-            arguments = len(expression_tree.arg_list)
+            arguments = len(expression_tree.args)
         elif isinstance(expression_tree, ast.Var):
             name = expression_tree.name
             for scope in reversed(self.var_map):
@@ -198,24 +174,25 @@ class CodeGenerator:
             assert isinstance(expression_tree, ast.Int)
             return '[-]' + '+' * expression_tree.value
 
-    def inline_function(self, node, expr=False):
-        # check for errors
-        if node.name not in self.funcs:
-            raise CodeGenError(f'line {node.line}: function \'{node.name}\' not defined')
-        func = self.funcs[node.name]
-        if expr and func.type == 'void':
-            raise CodeGenError(f'line {node.line}: function \'{node.name}\' returns void')
-        parameters = len(func.args)
-        arguments = len(node.arg_list)
-        if paramters != arguments:
-            raise CodeGenError(f'line {node.line}: function \'{node.name}\' needs {parameters} arguments, got {arguments}')
-        # evaluate function inline
+    def inline_function(self, node):
         old_var_map = self.var_map
         self.var_map = [{}]
+        self.current_funcs.append(node.name)
         code = ''
-        # TODO: add arguments, test for return
-        for decl in func.args:
+        for decl in node.args:
             code += self.gen_stmnt(decl)
         for stmnt in func.block.stmnt_list:
-            code += self.gen_stmnt(stmnt)
+            if isinstance(stmnt, ast.FuncCall):
+                name = stmnt.name
+                if name not in self.funcs:
+                    raise CodeGenError(f'line {stmnt.line}: function \'{name}\' does not exist')
+                if name in self.current_funcs:
+                    raise CodeGenError(f'line {stmnt.line}: function \'{name}\' is recursive')
+                if self.funcs[name].code is None:
+                    self.funcs[name].code = self.inline_function(self.funcs[name].node)
+                code += self.funcs[name]
+            else:
+                code += self.gen_stmnt(stmnt)
+        self.current_funcs.pop()
+        self.var_map = old_var_map
         return code

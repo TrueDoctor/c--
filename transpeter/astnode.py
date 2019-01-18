@@ -80,7 +80,7 @@ class FuncCall(AstNode):
     def __init__(self, line, name, args):
         super().__init__(line)
         self.name = name
-        self.arg_list = args
+        self.args = args
 
 
 # expressions

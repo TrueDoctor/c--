@@ -37,6 +37,12 @@ class Peekable:
         return temp
 
 
+class Function:
+    def __init__(self, node):
+        self.node= node
+        self.code = None
+
+
 def print_tree(tree, prefix=''):
     if isinstance(tree, AstNode):
         print(tree.__class__.__name__)
