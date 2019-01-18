@@ -1,6 +1,5 @@
 import sys
 import os.path
-import re
 from argparse import ArgumentParser
 
 from lexer import Lexer
