@@ -1,3 +1,5 @@
+import re
+
 from utils import CompilerError
 import astnode as ast
 
