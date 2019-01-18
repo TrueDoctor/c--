@@ -31,7 +31,7 @@ class CodeGenerator:
         self.var_map = [{}]
         self.stack_ptr = 0
         # vvv might change
-        for func in self.funcs:
+        for func in self.funcs.values():
             if self.check_recursion(func.name, func.block.stmnt_list):
                 raise CodeGenError(f'line {func.line}: recursion in function \'func.name\'')
 
@@ -182,8 +182,9 @@ class CodeGenerator:
             func = self.funcs[expression_tree.name]
             if func.type == 'void':
                 raise CodeGenError('line {expression_tree.line}: function \'{expression_tree.name}\' returns void')
-            parameters = len(func.arg_list)
-            arguments = len(expression_tree.args)
+            parameters = len(func.args)
+            arguments = len(expression_tree.arg_list)
+            
         elif isinstance(expression_tree, ast.Var):
             name = expression_tree.name
             for scope in reversed(self.var_map):
