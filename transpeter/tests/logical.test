@@ -1,4 +1,3 @@
-# expression:    expected result: 
 int a = 5 == 5;  # 1
 int b = 1 == 5;  # 0
 
@@ -17,3 +16,18 @@ int l = 5 and 42;  # 1
 
 int m = not 0;  # 1
 int n = not 42;  # 0
+putchar(a + 48);
+putchar(b + 48);
+putchar(c + 48);
+putchar(d + 48);
+putchar(e + 48);
+putchar(f + 48);
+putchar(g + 48);
+putchar(h + 48);
+putchar(i + 48);
+putchar(j + 48);
+putchar(k + 48);
+putchar(l + 48);
+putchar(m + 48);
+putchar(n + 48);
+putchar(10);

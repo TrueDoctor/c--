@@ -63,7 +63,7 @@ class CodeGenerator:
             for stmnt in tree.stmnt_list:
                 code += self.gen_stmnt(stmnt)
             old_vars = len(self.var_map.pop())
-            stack.ptr -= old_vars
+            self.stack_ptr -= old_vars
             return code + '<' * old_vars
         elif isinstance(tree, ast.If):
             expr = self.eval_expr(tree.cond)
