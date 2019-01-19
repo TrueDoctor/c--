@@ -46,8 +46,10 @@ struct BfInstr {
 	BfInstr(BfInstrCode type, JumpType x) : type(type), jump(x) {  }
 	BfInstr(BfInstrCode type, LoadType x) : type(type), load(x) {  }
 	BfInstr(BfInstrCode type, RelsetType x) : type(type), relset(x) {  }
-	inline static BfInstr Nop() { return BfInstr(BfInstrCode::nop); } inline static BfInstr Zstore() { return BfInstr(BfInstrCode::zstore); }
-	inline static BfInstr Print() { return BfInstr(BfInstrCode::print); } inline static BfInstr Getchr() { return BfInstr(BfInstrCode::getchr); }
+	inline static BfInstr Nop() { return BfInstr(BfInstrCode::nop); }
+	inline static BfInstr Zstore() { return BfInstr(BfInstrCode::zstore); }
+	inline static BfInstr Print() { return BfInstr(BfInstrCode::print); }
+	inline static BfInstr Getchr() { return BfInstr(BfInstrCode::getchr); }
 	inline static BfInstr Add(icell v) { return BfInstr(BfInstrCode::add, v); }
 	inline static BfInstr Shift(icell v) { return BfInstr(BfInstrCode::shift, v); }
 	inline static BfInstr Set(ucell v) { return BfInstr(BfInstrCode::set, v); }
@@ -135,10 +137,16 @@ struct BfOptimizer {
 		}
 		for (u32 i = 0; i < raw_code.size; i++) {
 			auto c = raw_code[i];
-			switch (c) { case '-': incr--; break; case '+': incr++; break;
-			default: if (incr) { code.add(BfInstr::Add(incr)); incr = 0; } }
-			switch (c) { case '<': shift--; continue; case '>': shift++; continue;
-			default: if (shift) { code.add(BfInstr::Shift(shift)); shift = 0; } }
+			switch (c) {
+				case '-': incr--; break;
+				case '+': incr++; break;
+				default: if (incr) { code.add(BfInstr::Add(incr)); incr = 0; }
+			}
+			switch (c) {
+				case '<': shift--; continue;
+				case '>': shift++; continue;
+				default: if (shift) { code.add(BfInstr::Shift(shift)); shift = 0; }
+			}
 			if (c == '.') code.add(BfInstr::Print());
 			else if (c == ',') code.add(BfInstr::Getchr());
 			else if (c == '[') {
@@ -228,25 +236,25 @@ struct BfRunner {
 		for (u32 instr_nr = 0; instr_nr < code_size; instr_nr++) {
 			auto c = code[instr_nr];
 			switch (c.type) {
-			case BfInstrCode::add:
-				*pos += c.add; break;
-			case BfInstrCode::shift:
-				pos += c.shift; break;
-			case BfInstrCode::set:
-				*pos = c.set; break;
-			case BfInstrCode::zstore:
-				reg = *pos; *pos = 0; break;
-			case BfInstrCode::load:
-				pos[c.load.addr] += reg * c.load.multiplier; break;
-			case BfInstrCode::jump:
-				if ((!*pos && c.jump.zero) || (*pos && !c.jump.zero)) instr_nr = c.jump.pos - 1;
-				break;
-			case BfInstrCode::relset:
-				pos[c.relset.addr] = c.relset.value; break;
-			case BfInstrCode::print:
-				putchar(*pos); break;
-			case BfInstrCode::getchr:
-				*pos = getchar(); break;
+				case BfInstrCode::add:
+					*pos += c.add; break;
+				case BfInstrCode::shift:
+					pos += c.shift; break;
+				case BfInstrCode::set:
+					*pos = c.set; break;
+				case BfInstrCode::zstore:
+					reg = *pos; *pos = 0; break;
+				case BfInstrCode::load:
+					pos[c.load.addr] += reg * c.load.multiplier; break;
+				case BfInstrCode::jump:
+					if ((!*pos && c.jump.zero) || (*pos && !c.jump.zero)) instr_nr = c.jump.pos - 1;
+					break;
+				case BfInstrCode::relset:
+					pos[c.relset.addr] = c.relset.value; break;
+				case BfInstrCode::print:
+					putchar(*pos); break;
+				case BfInstrCode::getchr:
+					*pos = getchar(); break;
 			}
 		}
 	}
