@@ -1,13 +1,14 @@
 int char;
 
 putchar(104);
-putchar(101);
+putchar(97);
 putchar(108);
 putchar(108);
-putchar(11);
+putchar(111);
 putchar(10);
 
-repeat(8) {
+repeat(4) {
     char = getchar();
     putchar(char);
 }
+putchar(10);

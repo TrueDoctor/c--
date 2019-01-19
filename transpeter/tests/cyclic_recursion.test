@@ -1,10 +1,8 @@
 # check cyclic recursion
-int foo() {
+void foo() {
     bar();
-    # return bar();
 }
 
-int bar() {
+void bar() {
     foo();
-    # return foo();
 }
