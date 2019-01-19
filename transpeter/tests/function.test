@@ -13,3 +13,4 @@ int b(int number) {
 }
 
 print(b(86));
+print(10);
