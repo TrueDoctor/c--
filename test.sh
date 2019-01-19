@@ -1,6 +1,6 @@
 #Unit Test script
 bin="inter-fuck"           # The application (from command arg)
-diff="diff -iad"   # Diff command, or what ever
+diff='diff -ad -I '^#''   # Diff command, or what ever
 
 # An array, do not have to declare it, but is supposedly faster
 declare -a file_base=("file1" "file2" "file3")
@@ -24,11 +24,13 @@ for file in transpeter/tests/*.test; do
         continue;
     fi
 
-    printf "Testing against %s\n" "$file_in"
+    printf "Testing against %s\n" "$file_in" ":"
+    cat $file_out_val
+    printf "\n"
 
     # Run application, redirect in file to app, and output to out file
-    if python3 -o transpeter/main.py $file_in $file_out_bf; then
-       python3 -o transpeter/main.py $file_in $file_out_bf
+    if python3 transpeter/main.py -o $file_in $file_out_bf; then
+       python3 transpeter/main.py -o $file_in $file_out_bf
         ./$bin $file_out_bf > $file_out_tst
     else
         python3 transpeter/main.py $file_in 2> "$file_out_tst"
