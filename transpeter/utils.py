@@ -39,7 +39,7 @@ class Peekable:
 
 class Function:
     def __init__(self, node):
-        self.node= node
+        self.node = node
         self.code = None
 
     def __repr__(self):

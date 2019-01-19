@@ -1,4 +1,3 @@
-from builtin import PUTCHAR, GETCHAR
 from utils import Peekable, CompilerError
 import astnode as ast
 
@@ -25,7 +24,7 @@ class Parser:
         return token
 
     def parse(self, program):
-        instr = [PUTCHAR, GETCHAR]
+        instr = []
         while self.tokens.peek != Parser.EOF:
             if self.tokens.peek == 'type':  # function or declaration
                 var_type, name, line = self.parse_decl()
