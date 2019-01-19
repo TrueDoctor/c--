@@ -14,11 +14,11 @@ transpeter/__pycache__
 
 # exclude output files
 inter-fuck
-transpeter/*.out
+**/*.out
+**/*.bf
 
 # exclude source files
-*.cmm
-*/*.cmm
+**/*.cmm
 
 # outputs from the Nix package manager
 result
