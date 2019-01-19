@@ -110,7 +110,9 @@ class CodeGenerator:
             return tree.expr
         else:
             assert isinstance(tree, ast.Return), tree
-            raise CodeGenError(f'line {tree.line}: return outside of function')
+            if len(self.current_funcs) == 0:
+                raise CodeGenError(f'line {tree.line}: return outside of function')
+            raise CodeGenError(f'line {tree.line}: invalid position for return')
 
     def eval_expr(self, expression_tree):
         if isinstance(expression_tree, ast.BinOp):
@@ -181,9 +183,10 @@ class CodeGenerator:
             code += self.gen_stmnt(decl)
         for stmnt in node.block.stmnt_list:
             if isinstance(stmnt, ast.Return):
-                expr = self.eval_expr(stmnt.expr)
+                code += self.eval_expr(stmnt.expr)
                 old_vars = len(self.var_map[-1])
-                code += '{2}{0}[-]{1}[-{0}+{1}]{0}'.format('<' * old_vars, '>' * old_vars, expr)
+                if len(node.args) > 0:
+                    code += '{0}[-]{1}[-{0}+{1}]{0}'.format('<' * old_vars, '>' * old_vars)
                 self.stack_ptr -= old_vars
                 break
             else:
