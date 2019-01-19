@@ -161,8 +161,6 @@ class CodeGenerator:
                 return f'[-]+>{expr}[<->[-]]<'
         elif isinstance(expression_tree, ast.FuncCall):
             return self.function_call(expression_tree, expr=True)
-        elif isinstance(expression_tree, ast.Inline):
-            return self.gen_stmnt(expression_tree)
         elif isinstance(expression_tree, ast.Var):
             name = expression_tree.name
             for scope in reversed(self.var_map):
@@ -196,9 +194,9 @@ class CodeGenerator:
         else:
             if node.type != 'void':
                 raise CodeGenError(f'line {node.block.stmnt_list[-1].line if len(node.block.stmnt_list) > 0 else node.block.line}: expected return')
-        old_vars = len(self.var_map[-1])
-        code += '<' * old_vars
-        self.stack_ptr -= old_vars
+            old_vars = len(self.var_map[-1])
+            code += '<' * old_vars
+            self.stack_ptr -= old_vars
         self.var_map = old_var_map
         return code
 
