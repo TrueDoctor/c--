@@ -1,15 +1,9 @@
 import re
 
 from utils import CompilerError, Function
+from builtin import precompile
 import astnode as ast
 
-
-def check_recursion(name, tree):
-    for node in tree:
-        if isinstance(node, ast.FuncCall):
-            if node.name == name:
-                return true
-            return check_recursion(node)
 
 class CodeGenError(CompilerError):
     pass
@@ -18,7 +12,7 @@ class CodeGenError(CompilerError):
 class CodeGenerator:
     def __init__(self, tree):
         self.current_funcs = []
-        self.funcs = {}
+        self.funcs = precompile()
         self.program = ast.Program(tree.name, [])
         for node in tree.instr_list:
             if isinstance(node, ast.Func):
