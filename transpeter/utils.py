@@ -42,6 +42,9 @@ class Function:
         self.node= node
         self.code = None
 
+    def __repr__(self):
+        return f'Function({self.node}, {self.code})'
+
 
 def print_tree(tree, prefix=''):
     if isinstance(tree, AstNode):

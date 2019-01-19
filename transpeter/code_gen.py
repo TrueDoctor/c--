@@ -4,9 +4,6 @@ from utils import CompilerError, Function
 import astnode as ast
 
 
-def not_yet_implemented():
-    raise CodeGenError('functions not yet implemented')
-
 def check_recursion(name, tree):
     for node in tree:
         if isinstance(node, ast.FuncCall):
@@ -34,9 +31,13 @@ class CodeGenerator:
         self.stack_ptr = 0
 
     def generate(self, optimize=False, n=80):
+        for func in self.funcs.values():
+            if func.code is None:
+                self.current_funcs.append(func.node.name)
+                func.code = self.inline_function(func.node)
+                self.current_funcs.pop()
         code = ''
         for node in self.program.instr_list:
-            print(node)
             code += self.gen_stmnt(node)
         code = '\n'.join([code[i:i+n] for i in range(0, len(code), n)])
         if optimize:
@@ -182,7 +183,7 @@ class CodeGenerator:
             if isinstance(stmnt, ast.Return):
                 expr = self.eval_expr(stmnt.expr)
                 old_vars = len(self.var_map[-1])
-                code += expr + '{0}[-][{1}-{0}+]'.format('<' * old_vars, '>' * old_vars)
+                code += '{2}{0}[-]{1}[-{0}+{1}]{0}'.format('<' * old_vars, '>' * old_vars, expr)
                 self.stack_ptr -= old_vars
                 break
             else:
@@ -215,7 +216,6 @@ class CodeGenerator:
             self.stack_ptr += 1
         code += '<' * len(node.args)
         self.stack_ptr -= len(node.args)
-        print(f"debug [{node.name}]: {code}")
         if func.code is None:
             func.code = self.inline_function(func.node)
         self.current_funcs.pop()
