@@ -1,18 +1,15 @@
 #Unit Test script
-bin="inter-fuck"           # The application (from command arg)
-diff='diff -ad -I '^#''   # Diff command, or what ever
-
-# An array, do not have to declare it, but is supposedly faster
-declare -a file_base=("file1" "file2" "file3")
+bin="inter-fuck"          # Brainfuck interpreter
+diff='diff -ad -I '^#''   # Diff command,
 
 # Loop the array
 for file in transpeter/tests/*.test; do
     # Padd file_base with suffixes
-    base=${file%.test}
+    base=${file%.test}               # get the base filename
     file_in="$base.test"             # The in file
-    file_out_val="$base.result"       # The out file to check against
-    file_out_bf="$base.bf"       # The out file to check against
-    file_out_tst="$base.out"   # The outfile from test application
+    file_out_val="$base.result"      # The out file to check against
+    file_out_bf="$base.bf"           # The out file to check against
+    file_out_tst="$base.out"         # The outfile from test application
 
     # Validate infile exists (do the same for out validate file)
     if [ ! -f "$file_in" ]; then
@@ -25,14 +22,17 @@ for file in transpeter/tests/*.test; do
     fi
 
     printf "Testing against %s\n" "$file_in" ":"
-    cat $file_out_val
+    cat $file_out_val  # print expected output
     printf "\n"
 
     # Run application, redirect in file to app, and output to out file
+    # First check wether cmm code compiles sucessfully
     if python3 transpeter/main.py -o $file_in $file_out_bf &> /dev/null; then
        python3 transpeter/main.py -o $file_in $file_out_bf
         ./$bin $file_out_bf > $file_out_tst
+        # run test
     else
+        # pipe compiler error into out file
         python3 transpeter/main.py $file_in 2> "$file_out_tst"
     fi
 
