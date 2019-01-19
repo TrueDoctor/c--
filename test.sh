@@ -29,7 +29,7 @@ for file in transpeter/tests/*.test; do
     printf "\n"
 
     # Run application, redirect in file to app, and output to out file
-    if python3 transpeter/main.py -o $file_in $file_out_bf; then
+    if python3 transpeter/main.py -o $file_in $file_out_bf &> /dev/null; then
        python3 transpeter/main.py -o $file_in $file_out_bf
         ./$bin $file_out_bf > $file_out_tst
     else
