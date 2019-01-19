@@ -1,7 +1,7 @@
 import re
 
 from utils import CompilerError, Function
-from builtin import precompile
+# from builtin import precompile
 import astnode as ast
 
 
@@ -12,7 +12,8 @@ class CodeGenError(CompilerError):
 class CodeGenerator:
     def __init__(self, tree):
         self.current_funcs = []
-        self.funcs = precompile()
+        # self.funcs = precompile()
+        self.funcs = {}
         self.program = ast.Program(tree.name, [])
         for node in tree.instr_list:
             if isinstance(node, ast.Func):
@@ -97,7 +98,7 @@ class CodeGenerator:
             if tree.op == '*=':
                 return '{2}>[-]>[-]<<{0}[-{1}>>+<<{0}]{1}>>[<<[{0}+{1}>+<-]>[<+>-]>-]<<'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '/=':
-                pass
+                return '{2}>[-]>[-]>[-]>[-]<<<<{0}[{1}>+<{0}-]{1}>[<[>>+>+<<<-]>>>[<<<+>>>-]<[>+<<-[>>[-]>+<<<-]>>>[<<<+>>>-]<[<-[<<{0}-{1}>>[-]]+>-]<-]<<{0}+{1}>]<'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '%=':
                 pass
         elif isinstance(tree, ast.Inline):
