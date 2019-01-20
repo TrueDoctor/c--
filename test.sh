@@ -7,6 +7,7 @@ for file in transpeter/tests/*.test; do
     # Padd file_base with suffixes
     base=${file%.test}               # get the base filename
     file_in="$base.test"             # The in file
+    file_in_val="$base.input"        # The input sequence file
     file_out_val="$base.result"      # The out file to check against
     file_out_bf="$base.bf"           # The out file to check against
     file_out_tst="$base.out"         # The outfile from test application
@@ -28,8 +29,13 @@ for file in transpeter/tests/*.test; do
     # Run application, redirect in file to app, and output to out file
     # First check wether cmm code compiles sucessfully
     if python3 transpeter/main.py -o $file_in $file_out_bf &> /dev/null; then
-       python3 transpeter/main.py -o $file_in $file_out_bf
-        ./$bin $file_out_bf > $file_out_tst
+        python3 transpeter/main.py -o $file_in $file_out_bf
+        # check wether an input sequence is given
+        if [ -f "$file_in_val" ]; then
+            cat $file_in_val | ./$bin $file_out_bf > $file_out_tst
+        else
+            ./$bin $file_out_bf > $file_out_tst
+        fi
         # run test
     else
         # pipe compiler error into out file
@@ -53,12 +59,19 @@ for file in transpeter/tests/*.test; do
     fi
 
     # Pause by prompt
-    read -p "Enter a to abort, anything else to continue: " input_data
-    # Iff input is "a" then abort
-    [ "$input_data" == "a" ] && break
+    if [ ! "$1" == "p" ]; then
+        read -p "Enter a to abort, anything else to continue: " input_data
+        # Iff input is "a" then abort
+        [ "$input_data" == "a" ] && break
+    fi
 
 done
 
+read -p "Enter k to keep temporary files, anything else to continue: " input_data
+[ "$input_data" == "k" ] && exit 0
+
+rm  transpeter/tests/*.bf
+rm  transpeter/tests/*.out
 # Clean exit with status 0
 exit 0
 

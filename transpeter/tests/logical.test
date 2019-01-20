@@ -1,6 +1,3 @@
-void putchar(int c) {
-    inline "<.>";
-}
 int a = 5 == 5;  # 1
 int b = 1 == 5;  # 0
 
