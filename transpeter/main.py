@@ -1,6 +1,7 @@
 import sys
 import os.path
 import pickle
+import hashlib
 from argparse import ArgumentParser
 
 from lexer import Lexer
@@ -19,7 +20,7 @@ int getchar() {
     return _;
 }
 '''
-file_name = str(hash(stdlib_src))+'.pkl'
+file_name = hashlib.md5(stdlib_src.encode()).hexdigest()+'.pkl'
 
 if __name__ == "__main__":
     parser = ArgumentParser()
