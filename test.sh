@@ -32,6 +32,7 @@ for file in transpeter/tests/*.test; do
         python3 transpeter/main.py -o $file_in $file_out_bf
         # check wether an input sequence is given
         if [ -f "$file_in_val" ]; then
+            # pipe the input sequence to cin of inter-fuck
             cat $file_in_val | ./$bin $file_out_bf > $file_out_tst
         else
             ./$bin $file_out_bf > $file_out_tst
@@ -58,7 +59,7 @@ for file in transpeter/tests/*.test; do
             printf "TEST OK!\n"
     fi
 
-    # Pause by prompt
+    # Pause by prompt if argument p is not given
     if [ ! "$1" == "p" ]; then
         read -p "Enter a to abort, anything else to continue: " input_data
         # Iff input is "a" then abort
@@ -67,6 +68,7 @@ for file in transpeter/tests/*.test; do
 
 done
 
+# cleanup
 read -p "Enter k to keep temporary files, anything else to continue: " input_data
 [ "$input_data" == "k" ] && exit 0
 
