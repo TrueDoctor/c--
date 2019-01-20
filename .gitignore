@@ -16,6 +16,7 @@ transpeter/__pycache__
 inter-fuck
 **/*.out
 **/*.bf
+**/*.pkl
 
 # exclude source files
 **/*.cmm

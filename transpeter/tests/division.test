@@ -1,6 +1,3 @@
-void putchar(int a) {
-    inline "<.>";
-}
 int a = 42;
 a /= 6;
 int b = a + 48;
