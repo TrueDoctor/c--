@@ -8,7 +8,6 @@ from parser import Parser
 from code_gen import CodeGenerator
 from utils import print_tree, CompilerError
 
-file_name = 'stdlib.pkl'
 stdlib_src = '''# standard library
 void putchar(int arg) {
     inline <.>;
@@ -20,6 +19,7 @@ int getchar() {
     return _;
 }
 '''
+file_name = str(hash(stdlib_src))+'.pkl'
 
 if __name__ == "__main__":
     parser = ArgumentParser()
