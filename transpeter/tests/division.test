@@ -1,5 +1,11 @@
+# /=
 int a = 42;
 a /= 6;
 int b = a + 48;
 putchar(b);
+putchar(10);
+
+# /
+putchar(210 / 5);
+putchar(42 / 1);
 putchar(10);
