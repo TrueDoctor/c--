@@ -1,7 +1,6 @@
 import re
 
 from utils import CompilerError, Function
-# from builtin import precompile
 import astnode as ast
 
 
@@ -10,10 +9,9 @@ class CodeGenError(CompilerError):
 
 
 class CodeGenerator:
-    def __init__(self, tree):
+    def __init__(self, tree, stdlib=None):
         self.current_funcs = []
-        # self.funcs = precompile()
-        self.funcs = {}
+        self.funcs = {} if stdlib is None else stdlib
         self.program = ast.Program(tree.name, [])
         for node in tree.instr_list:
             if isinstance(node, ast.Func):
@@ -34,10 +32,10 @@ class CodeGenerator:
         code = ''
         for node in self.program.instr_list:
             code += self.gen_stmnt(node)
-        code = '\n'.join([code[i:i+n] for i in range(0, len(code), n)])
         if optimize:
             while re.search(r'\+-|-\+|<>|><', code):
                 code = re.sub(r'\+-|-\+|<>|><', '', code)
+        code = '\n'.join([code[i:i + n] for i in range(0, len(code), n)])
         return f'[{self.program.name}]\n{code}'
 
     def gen_stmnt(self, tree):
@@ -180,7 +178,7 @@ class CodeGenerator:
             if isinstance(stmnt, ast.Return):
                 code += self.eval_expr(stmnt.expr)
                 old_vars = len(self.var_map[-1])
-                if len(node.args) > 0:
+                if old_vars > 0:
                     code += '{0}[-]{1}[-{0}+{1}]{0}'.format('<' * old_vars, '>' * old_vars)
                 self.stack_ptr -= old_vars
                 break
@@ -188,7 +186,8 @@ class CodeGenerator:
                 code += self.gen_stmnt(stmnt)
         else:
             if node.type != 'void':
-                raise CodeGenError(f'line {node.block.stmnt_list[-1].line if len(node.block.stmnt_list) > 0 else node.block.line}: expected return')
+                line = node.block.stmnt_list[-1].line if len(node.block.stmnt_list) > 0 else node.block.line
+                raise CodeGenError(f'line {line}: expected return')
             old_vars = len(self.var_map[-1])
             code += '<' * old_vars
             self.stack_ptr -= old_vars
@@ -204,16 +203,16 @@ class CodeGenerator:
         func = self.funcs[node.name]
         if expr and func.node.type == 'void':
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' returns void')
-        arguments = len(node.args)
-        parameters = len(func.node.args)
-        if arguments != parameters:
-            raise CodeGenError(f'line {node.line}: function \'{node.name}\' expects {parameters} arguments, got {arguments}')
+        args = len(node.args)
+        params = len(func.node.args)
+        if args != params:
+            raise CodeGenError(f'line {node.line}: function \'{node.name}\' expects {params} arguments, got {args}')
         code = ''
         for arg in node.args:
             code += self.eval_expr(arg) + '>'
             self.stack_ptr += 1
-        code += '<' * len(node.args)
-        self.stack_ptr -= len(node.args)
+        code += '<' * args
+        self.stack_ptr -= args
         if func.code is None:
             func.code = self.inline_function(func.node)
         self.current_funcs.pop()

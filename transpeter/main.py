@@ -1,11 +1,25 @@
 import sys
 import os.path
+import pickle
 from argparse import ArgumentParser
 
 from lexer import Lexer
 from parser import Parser
 from code_gen import CodeGenerator
 from utils import print_tree, CompilerError
+
+file_name = 'stdlib.pkl'
+stdlib_src = '''# standard library
+void putchar(int arg) {
+    inline <.>;
+}
+
+int getchar() {
+    int _;
+    inline <,>;
+    return _;
+}
+'''
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -23,11 +37,22 @@ if __name__ == "__main__":
         sys.exit(parser.format_usage())
     try:
         lex = Lexer()
+        if os.path.exists(file_name):
+            with open(file_name, 'rb') as f:
+                stdlib = pickle.load(f)
+        else:
+            tokens = lex.tokenize(stdlib_src)
+            tree = Parser(tokens).parse('stdlib')
+            code_generator = CodeGenerator(tree)
+            code_generator.generate()
+            stdlib = code_generator.funcs
+            with open(file_name, 'wb') as f:
+                pickle.dump(stdlib, f, pickle.HIGHEST_PROTOCOL)
         tokens = lex.tokenize(code)
         parser = Parser(tokens)
         tree = parser.parse(os.path.basename(args.src))
-        code_generator = CodeGenerator(tree)
-        code = code_generator.generate(optimize=args.optimize)
+        code_generator = CodeGenerator(tree, stdlib)
+        code = code_generator.generate(args.optimize)
         if args.tree:
             print_tree(tree)
             if args.dest is None:
