@@ -1,6 +1,7 @@
 import sys
 import os.path
 import pickle
+import hashlib
 from argparse import ArgumentParser
 
 from lexer import Lexer
@@ -8,7 +9,6 @@ from parser import Parser
 from code_gen import CodeGenerator
 from utils import print_tree, CompilerError
 
-file_name = 'stdlib.pkl'
 stdlib_src = '''# standard library
 void putchar(int arg) {
     inline <.>;
@@ -20,6 +20,7 @@ int getchar() {
     return _;
 }
 '''
+file_name = 'stdlib_' + hashlib.md5(stdlib_src.encode()).hexdigest()[0:8] + '.pkl'
 
 if __name__ == "__main__":
     parser = ArgumentParser()
