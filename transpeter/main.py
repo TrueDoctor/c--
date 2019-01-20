@@ -20,7 +20,7 @@ int getchar() {
     return _;
 }
 '''
-file_name = hashlib.md5(stdlib_src.encode()).hexdigest()+'.pkl'
+file_name = 'stdlib_' + hashlib.md5(stdlib_src.encode()).hexdigest()[0:8] + '.pkl'
 
 if __name__ == "__main__":
     parser = ArgumentParser()
