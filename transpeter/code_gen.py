@@ -94,7 +94,7 @@ class CodeGenerator:
             if tree.op == '-=':
                 return '{2}[-{0}-{1}]'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '*=':
-                return '{2}>[-]>[-]<<{0}[-{1}>>+<<{0}]{1}>>[<<[{0}+{1}>+<-]>[<+>-]>-]<<'.format('<' * rel_addr, '>' * rel_addr, expr)
+                return '{2}>[-]>[-]<<{0}[-{1}>+<{0}]{1}[->[->+<<{0}+{1}>]>[-<+>]<<]'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '/=':
                 return '{2}>[-]>[-]>[-]>[-]<<<<{0}[{1}>+<{0}-]{1}>[<[>>+>+<<<-]>>>[<<<+>>>-]<[>+<<-[>>[-]>+<<<-]>>>[<<<+>>>-]<[<-[<<{0}-{1}>>[-]]+>-]<-]<<{0}+{1}>]<'.format('<' * rel_addr, '>' * rel_addr, expr)
             if tree.op == '%=':
@@ -118,7 +118,7 @@ class CodeGenerator:
             if expression_tree.op == '-':
                 return f'{left}>{right}[-<->]<'
             if expression_tree.op == '*':
-                return f'{left}>{right}>[-]>[-]<<<[->>>+<<<]>>>[<<[<+>>+<-]>[<+>-]>-]<<<'
+                return f'{left}>{right}>[-]>[-]<<<[->>+<<]>[->[->+<<<+>>]>[-<+>]<<]<'
             if expression_tree.op == '/':
                 return f'{left}>{right}>[-]>[-]>[-]>[-]<<<<<[>>+<<-]>>[<[>>+>+<<<-]>>>[<<<+>>>-]<[>+<<-[>>[-]>+<<<-]>>>[<<<+>>>-]<[<-[<<<->>>[-]]+>-]<-]<<<+>>]<<'
             if expression_tree.op == '%':
