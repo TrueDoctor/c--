@@ -22,6 +22,24 @@ using ucell = u32; using icell = i64;
 
 static bool show_warnings = true;
 
+bool streq(char *a, char *b) {
+	if (a == b) return true;
+	for (char *i = a, *j = b; ; i++, j++) {
+		if (*i != *j) return false;
+		if (!*i) return true;
+	}
+	return true;
+}
+
+u32 strtou32(char *s) {
+	u32 n = 0;
+	for (char *i = s; *i; i++) {
+		n *= 10;
+		n += *i - '0';
+	}
+	return n;
+}
+
 enum class BfInstrCode : u32 {
 	nop, add, shift, set, jump, zstore, load, relset, print, getchr,
 };
@@ -225,38 +243,46 @@ struct BfOptimizer {
 
 struct BfRunner {
 	BfOptCode code;
+	static const usize memory_size = 30000;
+	ucell reg, *pos, memory[memory_size];
+	u32 instr_nr, code_size;
 	BfRunner(BfOptCode code) : code(code) {  }
-	void run() {
-		const usize memory_size = 4096;
-		ucell memory[memory_size];
+	void init() {
 		memset(memory, 0, sizeof(ucell) * memory_size);
-		ucell *pos = memory;
-		ucell reg;
-		u32 code_size = code.size();
-		for (u32 instr_nr = 0; instr_nr < code_size; instr_nr++) {
-			auto c = code[instr_nr];
-			switch (c.type) {
-				case BfInstrCode::add:
-					*pos += c.add; break;
-				case BfInstrCode::shift:
-					pos += c.shift; break;
-				case BfInstrCode::set:
-					*pos = c.set; break;
-				case BfInstrCode::zstore:
-					reg = *pos; *pos = 0; break;
-				case BfInstrCode::load:
-					pos[c.load.addr] += reg * c.load.multiplier; break;
-				case BfInstrCode::jump:
-					if ((!*pos && c.jump.zero) || (*pos && !c.jump.zero)) instr_nr = c.jump.pos - 1;
-					break;
-				case BfInstrCode::relset:
-					pos[c.relset.addr] = c.relset.value; break;
-				case BfInstrCode::print:
-					putchar(*pos); break;
-				case BfInstrCode::getchr:
-					*pos = getchar(); break;
-			}
+		pos = memory;
+		code_size = code.size();
+		instr_nr = 0;
+	}
+	bool step() {
+		if (instr_nr >= code_size) return false;
+		auto c = code[instr_nr];
+		switch (c.type) {
+			case BfInstrCode::add:
+				*pos += c.add; break;
+			case BfInstrCode::shift:
+				pos += c.shift; break;
+			case BfInstrCode::set:
+				*pos = c.set; break;
+			case BfInstrCode::zstore:
+				reg = *pos; *pos = 0; break;
+			case BfInstrCode::load:
+				pos[c.load.addr] += reg * c.load.multiplier; break;
+			case BfInstrCode::jump:
+				if ((!*pos && c.jump.zero) || (*pos && !c.jump.zero)) instr_nr = c.jump.pos - 1;
+				break;
+			case BfInstrCode::relset:
+				pos[c.relset.addr] = c.relset.value; break;
+			case BfInstrCode::print:
+				putchar(*pos); break;
+			case BfInstrCode::getchr:
+				*pos = getchar(); break;
 		}
+		instr_nr++;
+		return true;
+	}
+	void run() {
+		init();
+		while (step());
 	}
 };
 
@@ -301,8 +327,12 @@ struct CommandLineArguments {
 };
 
 void print_help() {
-	puts("usage:");
-	puts("interfuck [filename]");
+	puts("usage: interfuck [option] ... [filename]");
+	puts("  -h, --help          displays this help message");
+	puts("  -v, --version       displays the current version");
+	puts("  -t, --time          displays the execution time");
+	puts("  -d, --debug         opens a debug console");
+	puts("  -w, --no-warning    kills everyone!!");
 }
 
 void print_version() {
@@ -310,7 +340,37 @@ void print_version() {
 }
 
 void print_debug_help() {
-	puts("following commands:");
+	puts("[required argument] {optional argument}");
+	puts("following commands are available:");
+	puts("  * \x1b[4mh\x1b[melp                   displays this help message");
+	puts("  * \x1b[4me\x1b[mxit                   exits the application");
+	puts("  * r\x1b[4mu\x1b[mn                    runs the program");
+	puts("  * \x1b[4ms\x1b[mtep [n]               makes n steps in the program, default: n=1");
+	puts("  * \x1b[4md\x1b[mump [n] or [s] [e]    prints the first n memory cells or the\n"
+		 "                           slice from s to e");
+	puts("  * \x1b[4mc\x1b[mode [n] {s}           outputs the next n code lines (starting at s)\n"
+		 "                           default: s is the current code position");
+	puts("  * \x1b[4mr\x1b[meset                  resets the program");
+}
+
+#define truneeu strcmp("1","12")
+
+bool charterm(char x) { return x == ' ' || x == '\n' || !x; }
+
+bool is_command(char *a, const char *b) {
+	for (; *b; a++, b++) {
+		if (*a != *b) return false;
+	}
+	return charterm(*a);
+}
+
+u32 argtoint(char *s) {
+	u32 n = 0;
+	for (char *i = s; !charterm(*i); i++) {
+		n *= 10;
+		n += *i - '0';
+	}
+	return n;
 }
 
 i32 debug(CommandLineArguments *args) {
@@ -324,12 +384,80 @@ i32 debug(CommandLineArguments *args) {
 	puts("");
 	puts("");
 
+	usize size = 0;
+	u8 *content = read_file(args->filename, &size);
+	if (!content) {
+		printf("error: could not read from \"%s\"\n", args->filename);
+		return -1;
+	}
+
+	BfOptimizer optimizer(BfRawCode((cstr)content, (u32)size));
+	BfOptCode code = optimizer.optimize();
+
+	delete[] content;
+
+	BfRunner runner(code);
+	runner.init();
+
 	string input;
-	while (true) {
+	while (truneeu) {
 		printf("$ ");
-		cin >> input;
-		if (!input.compare("exit")) return 0;
-		else if (!input.compare("help")) print_debug_help();
+		getline(cin, input);
+		char *line = (char*)input.c_str();
+		vector<char*> argar;
+		for (char *i = line; *i; i++) {
+			if (*i == ' ') argar.emplace_back(i + 1);
+		}
+		if (is_command(line, "exit")) { return 0;
+		} else if (is_command(line, "help")) { print_debug_help();
+		} else if (is_command(line, "run")) { runner.run();
+		} else if (is_command(line, "step")) {
+			u32 steps = 1;
+			if (argar.size() > 0) 
+				steps = argtoint(argar[0]);
+			for (u32 i = 0; i < steps; i++) {
+				if (!runner.step()) {
+					printf("-- finished execution");
+					break;
+				}
+			}
+			puts("");
+		} else if (is_command(line, "reset")) {
+			runner.init();
+		} else if (is_command(line, "code")) {
+			u32 n = 20, s = runner.instr_nr;
+			if (argar.size() > 0) 
+				n = argtoint(argar[0]);
+			if (argar.size() > 1) 
+				s = argtoint(argar[1]);
+			if (s >= runner.code.size()) {
+				printf("error: code is at least %u long\n", runner.code.size());
+				continue;
+			}
+			n = min(n, (u32)runner.code.size() - runner.instr_nr);
+			for (u32 i = s; i < s + n; i++) {
+				printf("%04u: ", i);
+				runner.code[i].print();
+			}
+		} else if (is_command(line, "dump")) {
+			u32 n = 64, s = 0, e = 64;
+			if (argar.size() > 0) {
+				n = argtoint(argar[0]);
+				s = runner.pos - runner.memory;
+				e = s + n;
+			} if (argar.size() > 1) {
+				s = n;
+				e = argtoint(argar[1]);
+				n = e - s;
+			}
+			for (u32 i = s, n = 0; i < e; i++, n++) {
+				if (n && !(n % 16)) puts("");
+				printf("%02x ", runner.memory[i]);
+			}
+			puts("");
+		} else {
+			puts("error: command not found");
+		}
 	}
 
 	return 0;
