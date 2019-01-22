@@ -107,9 +107,7 @@ class Parser:
                 return ast.Repeat(line, expr, stmnt)
         elif self.tokens.peek == 'return':  # return
             line = self.tokens.next().line
-            expr = None
-            if self.tokens.peek != ";":
-                expr = self.parse_expr()
+            expr = self.parse_expr()
             self.expect(';')
             return ast.Return(line, expr)
         elif self.tokens.peek == 'inline':  # inline
