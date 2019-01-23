@@ -124,13 +124,13 @@ class CodeGenerator:
             if expression_tree.op == '%':
                 pass
             if expression_tree.op == '<':
-                pass
+                return f'{left}>{right}>[-]>[-]<<<[->[->+>+<<]>[-<+>]>[<<->>[-]]<<<]>[<+>[-]]<'
             if expression_tree.op == '>':
-                pass
+                return f'{left}>{right}>[-]>[-]<<[-<[->>+>+<<<]>>[-<<+>>]>[<<<->>>[-]]<<]<[[-]+]'
             if expression_tree.op == '<=':
-                pass
+                return f'{left}>{right}>[-]>[-]<<[-<[->>+>+<<<]>>[-<<+>>]>[<<<->>>[-]]<<]<[->+<]+>[<->[-]]<'
             if expression_tree.op == '>=':
-                pass
+                return f'{left}>{right}>[-]>[-]<<<[->[->+>+<<]>[-<+>]>[<<->>[-]]<<<]+>[<->[-]]<'
             if expression_tree.op == "==":
                 return f'{left}>{right}<[->-<]+>[<->[-]]<'
             if expression_tree.op == '!=':
