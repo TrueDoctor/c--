@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--debug', help='prints stack trace for errors', action='store_true')
     parser.add_argument('-t', '--tree', help='prints the abstract syntax tree', action='store_true')
     parser.add_argument('-o', '--optimize', help='optimizes the emitted code', action='store_true')
-    parser.add_argument('-r', '--recompile', help='recompiles the stdandard library', action='store_true')
+    parser.add_argument('-r', '--recompile', help='recompiles the standard library', action='store_true')
     parser.add_argument('src', help='source file')
     parser.add_argument('dest', help='destination file', nargs='?', default=None)
     args = parser.parse_args()
