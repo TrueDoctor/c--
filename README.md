@@ -11,6 +11,6 @@ The aim of this project is to develop an easy way to write brainfuck code by tra
 * ./test.sh
 
 # Usage
-* python 3 /transpeter/main.py --help
+* python3 /transpeter/main.py --help
 * ./inter-fuck --help
 For further information please consult the [Wiki](https://github.com/TrueDoctor/c--/wiki/Home) until we rework this placeholder.
