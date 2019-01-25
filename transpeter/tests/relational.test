@@ -1,0 +1,52 @@
+void print(int bool) {
+	# 0 -> '0', 1 -> '1'
+    putchar(bool + 48);
+}
+
+int a = 0;
+int b = 1;
+int c = 42;
+
+# >
+print(a > a);
+print(c > c);
+print(a > b);
+print(b > a);
+print(a > c);
+print(c > a);
+print(b > c);
+print(c > b);
+putchar(10);
+
+# >=
+print(a >= a);
+print(c >= c);
+print(a >= b);
+print(b >= a);
+print(a >= c);
+print(c >= a);
+print(b >= c);
+print(c >= b);
+putchar(10);
+
+# <
+print(a < a);
+print(c < c);
+print(a < b);
+print(b < a);
+print(a < c);
+print(c < a);
+print(b < c);
+print(c < b);
+putchar(10);
+
+# <=
+print(a <= a);
+print(c <= c);
+print(a <= b);
+print(b <= a);
+print(a <= c);
+print(c <= a);
+print(b <= c);
+print(c <= b);
+putchar(10);

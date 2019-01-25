@@ -18,9 +18,9 @@ class Parser:
     def expect(self, value):
         token = self.tokens.next()
         if token == Parser.EOF:
-            raise ParserError('unexpected EOF')
+            raise ParserError(f'unexpected EOF, expected \'{value}\'')
         elif token != value:
-            raise ParserError('line {}: expected \'{}\', got \'{}\''.format(token.line, value, token.value))
+            raise ParserError(f'line {token.line}: expected \'{value}\', got \'{token.value}\'')
         return token
 
     def parse(self, program):

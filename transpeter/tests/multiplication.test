@@ -1,0 +1,15 @@
+# *=
+int a = 2;
+a *= 4;
+putchar(a + 48);
+putchar(10);
+
+# *
+putchar(6 * 7);
+putchar(42 * 1);
+putchar(1 * 42);
+putchar(10);
+
+putchar(0 * 1 + 48);
+putchar(1 * 0 + 48);
+putchar(10);
