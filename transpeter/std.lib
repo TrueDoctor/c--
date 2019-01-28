@@ -1,0 +1,11 @@
+# standard library
+
+void putchar(int char) {
+    inline <.>;
+}
+
+int getchar() {
+    int _;
+    inline <,>;
+    return _;
+}
