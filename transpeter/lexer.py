@@ -52,8 +52,7 @@ class Lexer:
                         k = 'int'
                         if v in Lexer.escape:
                             v = Lexer.escape[v]
-                        else:
-                            v = ord(v)
+                        v = ord(v)
                     elif k == 'id' and v in Lexer.types:
                         k = 'type'
                     # if the token is an operator, a separator or a keyword
