@@ -37,13 +37,25 @@ class Peekable:
         return temp
 
 
-class Function:
-    def __init__(self, node):
-        self.node = node
-        self.code = None
+class Variable:
+    def __init__(self, var_type, address):
+        self.type = var_type
+        self.addr = address
 
     def __repr__(self):
-        return f'Function({self.node}, {self.code})'
+        return f'{self.type} at {addr}'
+
+
+class Function:
+    def __init__(self, node):
+        self.code = None
+        self.args = []
+        self.type = node.type
+
+
+class Struct:
+    def __init__(self, members):
+        self.members = members
 
 
 def print_tree(tree, prefix=''):

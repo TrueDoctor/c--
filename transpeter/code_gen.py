@@ -1,6 +1,6 @@
 import re
 
-from utils import CompilerError, Function
+from utils import CompilerError, Function, Struct, Variable
 import astnode as ast
 
 
@@ -12,23 +12,27 @@ class CodeGenerator:
     def __init__(self, tree, stdlib=None):
         self.current_funcs = []
         self.funcs = {} if stdlib is None else stdlib
+        self.structs = {}
+        self.func_nodes = {}
         self.program = ast.Program(tree.name, [])
         for node in tree.instr_list:
             if isinstance(node, ast.Func):
-                if node.name in self.funcs:
+                if node.name in self.func_nodes:
                     raise CodeGenError(f'line {node.line}: function \'{node.name}\' defined twice')
-                self.funcs[node.name] = Function(node)
+                self.func_nodes[node.name] = node
             else:
                 self.program.instr_list.append(node)
         self.var_map = [{}]
         self.stack_ptr = 0
 
     def generate(self, optimize=False, n=80):
-        for func in self.funcs.values():
-            if func.code is None:
+        # generate code for functions
+        for name, node in self.func_nodes.items():
+            if self.funcs[name].code is None:
                 self.current_funcs.append(func.node.name)
-                func.code = self.inline_function(func.node)
+                self.funcs[name].code = self.inline_function(node)
                 self.current_funcs.pop()
+        # generate code for program
         code = ''
         for node in self.program.instr_list:
             code += self.gen_stmnt(node)
@@ -47,7 +51,7 @@ class CodeGenerator:
             code = ''
             if tree.init is not None:
                 code += self.eval_expr(tree.init)
-            self.var_map[-1][tree.name] = self.stack_ptr
+            self.var_map[-1][tree.name] = Variable('int', self.stack_ptr)  # TODO
             self.stack_ptr += 1
             return code + '>'
         elif isinstance(tree, ast.Block):
@@ -81,7 +85,7 @@ class CodeGenerator:
             name = tree.var
             for scope in reversed(self.var_map):
                 if name in scope:
-                    addr = scope[name]
+                    addr = scope[name].addr  # TODO
                     break
             else:
                 raise CodeGenError(f'line {tree.line}: variable \'{name}\' not declared')
@@ -158,7 +162,7 @@ class CodeGenerator:
             name = expression_tree.name
             for scope in reversed(self.var_map):
                 if name in scope:
-                    addr = scope[name]
+                    addr = scope[name].addr  # TODO
                     break
             else:
                 raise CodeGenError(f'line {expression_tree.line}: variable \'{name}\' not declared')
@@ -201,10 +205,10 @@ class CodeGenerator:
         if node.name not in self.funcs:
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' not defined')
         func = self.funcs[node.name]
-        if expr and func.node.type == 'void':
+        if expr and func.type == 'void':
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' returns void')
         args = len(node.args)
-        params = len(func.node.args)
+        params = len(func.args)
         if args != params:
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' expects {params} arguments, got {args}')
         code = ''
@@ -214,6 +218,6 @@ class CodeGenerator:
         code += '<' * args
         self.stack_ptr -= args
         if func.code is None:
-            func.code = self.inline_function(func.node)
+            func.code = self.inline_function(func_nodes[node.name])
         self.current_funcs.pop()
         return code + func.code
