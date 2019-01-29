@@ -9,18 +9,7 @@ from parser import Parser
 from code_gen import CodeGenerator
 from utils import print_tree, CompilerError
 
-stdlib_src = '''# standard library
-void putchar(int arg) {
-    inline <.>;
-}
-
-int getchar() {
-    int _;
-    inline <,>;
-    return _;
-}
-'''
-file_name = 'stdlib_' + hashlib.md5(stdlib_src.encode()).hexdigest()[0:8] + '.pkl'
+stdlib_src = 'std.lib'
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -39,11 +28,18 @@ if __name__ == "__main__":
         sys.exit(parser.format_usage())
     try:
         lex = Lexer()
+        try:
+            with open(stdlib_src) as stdlib_src_file:
+                stdlib_src_code = stdlib_src_file.read()
+        except OSError as e:
+            print('an error occured while loading stdlib', file=sys.stderr)
+            sys.exit(e)
+        file_name = 'stdlib_' + hashlib.md5(stdlib_src_code.encode()).hexdigest()[0:8] + '.pkl'
         if os.path.exists(file_name) and not args.recompile:
             with open(file_name, 'rb') as f:
                 stdlib = pickle.load(f)
         else:
-            tokens = lex.tokenize(stdlib_src)
+            tokens = lex.tokenize(stdlib_src_code)
             tree = Parser(tokens).parse('stdlib')
             code_generator = CodeGenerator(tree)
             code_generator.generate()

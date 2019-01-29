@@ -8,6 +8,7 @@
 #include <stack>
 #include <chrono>
 #include <unordered_map>
+#include <string>
 #include <fcntl.h>
 #include <fstream>
 #include <string.h>
@@ -263,8 +264,11 @@ u8 *read_file(const char *path, usize *size) {
 	auto file = fopen(path, "rb");
 	if (!file) return nullptr;
 
-	fseek(file, 0, SEEK_END);
-	*size = (usize)ftell(file);
+	if (fseek(file, 0, SEEK_END))
+		return nullptr;
+	i32 tell = ftell(file);
+	if (tell < 0) return nullptr;
+	*size = (usize)tell;
 	rewind(file);
 	*size -= ftell(file);
 
@@ -303,6 +307,32 @@ void print_help() {
 
 void print_version() {
 	puts("you really expected versioning dude?! fockin' 1.0 lol");
+}
+
+void print_debug_help() {
+	puts("following commands:");
+}
+
+i32 debug(CommandLineArguments *args) {
+	puts("\x1b[m");
+	puts("\x1b[31m+\x1b[35m--------------------------------------\x1b[31m+\x1b[m");
+	puts("\x1b[31m+ \x1b[97;1mwelcome\x1b[m\x1b[97m to the brainfuck debug shell\x1b[31m +\x1b[m");
+	puts("\x1b[31m+\x1b[35m--------------------------------------\x1b[31m+\x1b[m");
+	puts("");
+	puts("   \x1b[1;91m*\x1b[m you can request help with '\x1b[1mhelp\x1b[m'");
+	puts("   \x1b[1;91m*\x1b[m and you can exit by typing '\x1b[1mexit\x1b[m' and then press [\x1b[1menter\x1b[m]");
+	puts("");
+	puts("");
+
+	string input;
+	while (true) {
+		printf("$ ");
+		cin >> input;
+		if (!input.compare("exit")) return 0;
+		else if (!input.compare("help")) print_debug_help();
+	}
+
+	return 0;
 }
 
 i32 main(i32 argc, cstr argv[]) {
@@ -361,9 +391,8 @@ i32 main(i32 argc, cstr argv[]) {
 		return 0;
 	}
 
-   	if (args.debug) {
-		puts("doin som NIY shyt");
-	}
+   	if (args.debug)
+		return debug(&args);
 
 	if (!args.filename || !*args.filename) {
 		puts("error: needing an input file");
@@ -372,6 +401,10 @@ i32 main(i32 argc, cstr argv[]) {
 
 	usize size = 0;
 	u8 *content = read_file(args.filename, &size);
+	if (!content) {
+		printf("error: could not read from \"%s\"\n", args.filename);
+		return -1;
+	}
 
 	BfOptimizer optimizer(BfRawCode((cstr)content, (u32)size));
 	BfOptCode code = optimizer.optimize();
