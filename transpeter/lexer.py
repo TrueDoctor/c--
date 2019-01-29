@@ -12,7 +12,10 @@ class Lexer:
     separators = ['=', '{', '}', '(', ')', ';', ',']
     types = ['void', 'int']
     control = ['if', 'else', 'while', 'repeat', 'return', 'inline', 'struct']
-    escape = [r'\n', r'\r', r'\t', r'\b']
+    escape = {
+        r'\a': '\a', r'\b': '\b', r'\f': '\f', r'\n': '\n', r'\r': '\r', r'\t': '\t', r'\v': '\v',
+        r'\'': '\'', r'\"': '\"', r'\\': '\\'
+    }
 
     def __init__(self):
         regex = [
@@ -47,7 +50,10 @@ class Lexer:
                             v = int(v)
                     elif k == 'char':
                         k = 'int'
-                        v = ord(v)
+                        if v in Lexer.escape:
+                            v = Lexer.escape[v]
+                        else:
+                            v = ord(v)
                     elif k == 'id' and v in Lexer.types:
                         k = 'type'
                     # if the token is an operator, a separator or a keyword

@@ -43,13 +43,13 @@ class Variable:
         self.addr = address
 
     def __repr__(self):
-        return f'{self.type} at {addr}'
+        return f'{self.type} at {self.addr}'
 
 
 class Function:
     def __init__(self, node):
         self.code = None
-        self.args = []
+        self.args = [arg.type for arg in node.args]
         self.type = node.type
 
 

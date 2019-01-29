@@ -20,6 +20,7 @@ class CodeGenerator:
                 if node.name in self.func_nodes:
                     raise CodeGenError(f'line {node.line}: function \'{node.name}\' defined twice')
                 self.func_nodes[node.name] = node
+                self.funcs[node.name] = Function(node)
             else:
                 self.program.instr_list.append(node)
         self.var_map = [{}]
@@ -29,7 +30,7 @@ class CodeGenerator:
         # generate code for functions
         for name, node in self.func_nodes.items():
             if self.funcs[name].code is None:
-                self.current_funcs.append(func.node.name)
+                self.current_funcs.append(name)
                 self.funcs[name].code = self.inline_function(node)
                 self.current_funcs.pop()
         # generate code for program
@@ -51,8 +52,8 @@ class CodeGenerator:
             code = ''
             if tree.init is not None:
                 code += self.eval_expr(tree.init)
-            self.var_map[-1][tree.name] = Variable('int', self.stack_ptr)  # TODO
-            self.stack_ptr += 1
+            self.var_map[-1][tree.name] = Variable(tree.type, self.stack_ptr)
+            self.stack_ptr += 1  # TODO: change for structs
             return code + '>'
         elif isinstance(tree, ast.Block):
             self.var_map.append({})
@@ -218,6 +219,6 @@ class CodeGenerator:
         code += '<' * args
         self.stack_ptr -= args
         if func.code is None:
-            func.code = self.inline_function(func_nodes[node.name])
+            func.code = self.inline_function(self.func_nodes[node.name])
         self.current_funcs.pop()
         return code + func.code
