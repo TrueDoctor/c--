@@ -11,7 +11,7 @@ class Lexer:
     ops = ['+=', '+', '-=', '-', '*=', '*', '/=', '/', '%=', '%', '==', '!=', '>=', '<=', '>', '<', 'or', 'and', 'not']
     separators = ['=', '{', '}', '(', ')', ';', ',']
     types = ['void', 'int']
-    control = ['if', 'else', 'while', 'repeat', 'return', 'inline']
+    control = ['if', 'else', 'while', 'repeat', 'return', 'inline', 'struct']
     escape = [r'\n', r'\r', r'\t', r'\b']
 
     def __init__(self):
