@@ -34,7 +34,7 @@ if __name__ == "__main__":
         except OSError as e:
             print('an error occured while loading stdlib', file=sys.stderr)
             sys.exit(e)
-        file_name = 'stdlib_' + hashlib.md5(stdlib_src_code.encode()).hexdigest()[0:8] + '.pkl'
+        file_name = sys.argv[0][0:-7] + 'stdlib_' + hashlib.md5(stdlib_src_code.encode()).hexdigest()[0:8] + '.pkl'
         if os.path.exists(file_name) and not args.recompile:
             with open(file_name, 'rb') as f:
                 stdlib = pickle.load(f)
