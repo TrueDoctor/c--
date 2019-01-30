@@ -27,6 +27,12 @@ class Func(AstNode):
         self.block = block
 
 
+class Type(AstNode):
+    def __init__(self, line, type_name):
+        super().__init__(line)
+        self.type = type_name
+
+
 # statements
 class Block(AstNode):
     def __init__(self, line, statements):

@@ -26,29 +26,36 @@ class Parser:
     def parse(self, program):
         instr = []
         while self.tokens.peek != Parser.EOF:
-            if self.tokens.peek == 'type':  # function or declaration
-                var_type, name, line = self.parse_decl()
+            if self.tokens.peek in ('type', 'struct'):  # function or declaration
+                var_type, name = self.parse_decl()
                 if self.tokens.peek == '=':  # declaration with initialization
                     self.tokens.next()
                     expr = self.parse_expr()
                     self.expect(';')
-                    instr.append(ast.Decl(line, var_type, name, expr))
+                    instr.append(ast.Decl(var_type.line, var_type, name, expr))
                 elif self.tokens.peek == ';':  # declaration without initialization
                     self.tokens.next()
-                    instr.append(ast.Decl(line, var_type, name))
+                    instr.append(ast.Decl(var_type.line, var_type, name))
                 else:  # function
                     args, block = self.parse_func()
-                    instr.append(ast.Func(line, var_type, name, args, block))
+                    instr.append(ast.Func(var_type.line, var_type, name, args, block))
             else:  # statement
                 instr.append(self.parse_statement())
         tree = ast.Program(program, instr)
         return tree
 
+    def parse_type(self):
+        if self.tokens.peek == 'struct':
+            line = self.tokens.next().line
+            return ast.Type(line, 'struct ' + self.expect('id').value)
+        name = self.expect('type')
+        return ast.Type(name.line, name.value)
+
     def parse_func(self):  # returns args, statement (temp?)
         self.expect('(')
         args = []
         if self.tokens.peek != ')':
-            arg_type = self.expect('type')
+            arg_type = self.parse_type()
             name = self.expect('id')
             args.append(ast.Decl(arg_type.line, arg_type.value, name.value))
         while self.tokens.peek != ')':
@@ -80,9 +87,9 @@ class Parser:
         return ast.Block(line, block)
 
     def parse_decl(self):
-        next_token = self.expect('type')
+        var_type = self.parse_type()
         name = self.expect('id').value
-        return next_token.value, name, next_token.line
+        return var_type, name
 
     def parse_statement(self):
         if self.tokens.peek == '{':  # block
