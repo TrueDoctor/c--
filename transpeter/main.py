@@ -9,7 +9,7 @@ from parser import Parser
 from code_gen import CodeGenerator
 from utils import print_tree, CompilerError
 
-stdlib_src = 'transpeter/std.lib'
+stdlib_src = sys.argv[0][0:-7] + 'std.lib'
 
 if __name__ == "__main__":
     parser = ArgumentParser()
