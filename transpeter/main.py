@@ -9,7 +9,8 @@ from parser import Parser
 from code_gen import CodeGenerator
 from utils import print_tree, CompilerError
 
-stdlib_src = sys.argv[0][0:-7] + 'std.lib'
+path = os.path.dirname(__file__)
+stdlib_src = os.path.join(path, 'std.lib')
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -34,7 +35,7 @@ if __name__ == "__main__":
         except OSError as e:
             print('an error occured while loading stdlib', file=sys.stderr)
             sys.exit(e)
-        file_name = sys.argv[0][0:-7] + 'stdlib_' + hashlib.md5(stdlib_src_code.encode()).hexdigest()[0:8] + '.pkl'
+        file_name = os.path.join(path, 'stdlib_' + hashlib.md5(stdlib_src_code.encode()).hexdigest()[0:8] + '.pkl')
         if os.path.exists(file_name) and not args.recompile:
             with open(file_name, 'rb') as f:
                 stdlib = pickle.load(f)

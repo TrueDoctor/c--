@@ -26,19 +26,29 @@ class Parser:
     def parse(self, program):
         instr = []
         while self.tokens.peek != Parser.EOF:
-            if self.tokens.peek in ('type', 'struct'):  # function or declaration
-                var_type, name = self.parse_decl()
-                if self.tokens.peek == '=':  # declaration with initialization
+            if self.tokens.peek in ('type', 'struct'):  # function, struct or declaration
+                var_type = self.parse_type()
+                if self.tokens.peek == '{' and isinstance(var_type, ast.StructType):  # struct definition
                     self.tokens.next()
-                    expr = self.parse_expr()
-                    self.expect(';')
-                    instr.append(ast.Decl(var_type.line, var_type, name, expr))
-                elif self.tokens.peek == ';':  # declaration without initialization
+                    members = [self.parse_declaration(init=False)]
+                    while self.tokens.peek != '}':
+                        members.append(self.parse_declaration(init=False))
                     self.tokens.next()
-                    instr.append(ast.Decl(var_type.line, var_type, name))
-                else:  # function
-                    args, block = self.parse_func()
-                    instr.append(ast.Func(var_type.line, var_type, name, args, block))
+                    instr.append(ast.Struct(var_type.line, var_type.name, members))
+                else:
+                    name = self.expect('id').value
+                    if self.tokens.peek == '=':  # declaration with initialization
+                        self.tokens.next()
+                        expr = self.parse_expr()
+                        self.expect(';')
+                        instr.append(ast.Decl(var_type.line, var_type, name, expr))
+                    elif self.tokens.peek == ';':  # declaration without initialization
+                        self.tokens.next()
+                        instr.append(ast.Decl(var_type.line, var_type, name))
+                    else:  # function
+                        args = self.parse_func_args()
+                        block = self.parse_block()
+                        instr.append(ast.Func(var_type.line, var_type, name, args, block))
             else:  # statement
                 instr.append(self.parse_statement())
         tree = ast.Program(program, instr)
@@ -47,49 +57,45 @@ class Parser:
     def parse_type(self):
         if self.tokens.peek == 'struct':
             line = self.tokens.next().line
-            return ast.Type(line, 'struct ' + self.expect('id').value)
+            return ast.StructType(line, self.expect('id').value)
         name = self.expect('type')
         return ast.Type(name.line, name.value)
 
-    def parse_func(self):  # returns args, statement (temp?)
+    def parse_func_args(self):  # returns args, statement (temp?)
         self.expect('(')
         args = []
         if self.tokens.peek != ')':
             arg_type = self.parse_type()
-            name = self.expect('id')
-            args.append(ast.Decl(arg_type.line, arg_type.value, name.value))
+            name = self.expect('id').value
+            args.append(ast.Decl(arg_type.line, arg_type, name))
         while self.tokens.peek != ')':
             self.expect(',')
-            arg_type = self.expect('type')
-            name = self.expect('id')
-            args.append(ast.Decl(arg_type.line, arg_type.value, name.value))
+            arg_type = self.parse_type()
+            name = self.expect('id').value
+            args.append(ast.Decl(arg_type.line, arg_type, name))
         self.tokens.next()
-        block = self.parse_block()
-        return args, block
+        return args
+
+    def parse_declaration(self, init=True):
+        var_type = self.parse_type()
+        name = self.expect('id').value
+        expr = None
+        if init and self.tokens.peek == '=':
+            self.tokens.next()
+            expr = self.parse_expr()
+        self.expect(';')
+        return ast.Decl(var_type.line, var_type, name, init=expr)
 
     def parse_block(self):  # blocks
         line = self.expect('{').line
         block = []
         while self.tokens.peek != '}':
-            if self.tokens.peek == 'type':  # declaration
-                var_type, name, line = self.parse_decl()
-                if self.tokens.peek == '=':
-                    self.tokens.next()
-                    expr = self.parse_expr()
-                    self.expect(';')
-                    block.append(ast.Decl(line, var_type, name, expr))
-                else:
-                    self.expect(';')
-                    block.append(ast.Decl(line, var_type, name))
+            if self.tokens.peek in ('type', 'struct'):  # declaration
+                block.append(self.parse_declaration())
             else:  # statement
                 block.append(self.parse_statement())
         self.tokens.next()
         return ast.Block(line, block)
-
-    def parse_decl(self):
-        var_type = self.parse_type()
-        name = self.expect('id').value
-        return var_type, name
 
     def parse_statement(self):
         if self.tokens.peek == '{':  # block
@@ -126,16 +132,15 @@ class Parser:
                 args = self.parse_func_call()
                 self.expect(';')
                 return ast.FuncCall(name.line, name.value, args)
-            next_token = self.tokens.next()
-            if next_token in ('=', '+=', '-=', '*=', '/=', '%='):  # assignment
-                assign_op = next_token.type
+            elif self.tokens.peek in ('=', '+=', '-=', '*=', '/=', '%='):  # assignment
+                assign_op = self.tokens.next().type
                 expr = self.parse_expr()
                 self.expect(';')
                 return ast.Assign(name.line, assign_op, name.value, expr)
-            elif next_token == Parser.EOF:
+            elif self.tokens.peek == Parser.EOF:
                 raise ParserError('unexpected EOF')
             else:
-                raise ParserError('line {}: expected function call or assignment'.format(next_token.line))
+                raise ParserError('line {}: expected function call or assignment'.format(self.tokens.peek.line))
         elif self.tokens.peek == Parser.EOF:
             raise ParserError('unexpected EOF')
         else:

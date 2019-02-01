@@ -21,6 +21,10 @@ class CodeGenerator:
                     raise CodeGenError(f'line {node.line}: function \'{node.name}\' defined twice')
                 self.func_nodes[node.name] = node
                 self.funcs[node.name] = Function(node)
+            elif isinstance(node, ast.Struct):
+                if node.name in self.structs:
+                    raise CodeGenError(f'line {node.line}: struct \'{node.name}\' defined twice')
+                self.funcs[node.name] = Struct(node)  # TODO: change
             else:
                 self.program.instr_list.append(node)
         self.var_map = [{}]
@@ -45,14 +49,14 @@ class CodeGenerator:
 
     def gen_stmnt(self, tree):
         if isinstance(tree, ast.Decl):
-            if tree.type == 'void':
+            if tree.type.name == 'void':
                 raise CodeGenError(f'line {tree.line}: variable \'{tree.name}\' declared void')
             if tree.name in self.var_map[-1]:
                 raise CodeGenError(f'line {tree.line}: variable \'{tree.name}\' already declared in same scope')
             code = ''
             if tree.init is not None:
                 code += self.eval_expr(tree.init)
-            self.var_map[-1][tree.name] = Variable(tree.type, self.stack_ptr)
+            self.var_map[-1][tree.name] = Variable(repr(tree.type), self.stack_ptr)
             self.stack_ptr += 1  # TODO: change for structs
             return code + '>'
         elif isinstance(tree, ast.Block):
@@ -190,7 +194,7 @@ class CodeGenerator:
             else:
                 code += self.gen_stmnt(stmnt)
         else:
-            if node.type != 'void':
+            if node.type.name != 'void':
                 line = node.block.stmnt_list[-1].line if len(node.block.stmnt_list) > 0 else node.block.line
                 raise CodeGenError(f'line {line}: expected return')
             old_vars = len(self.var_map[-1])
@@ -206,7 +210,7 @@ class CodeGenerator:
         if node.name not in self.funcs:
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' not defined')
         func = self.funcs[node.name]
-        if expr and func.type == 'void':
+        if expr and func.type.name == 'void':
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' returns void')
         args = len(node.args)
         params = len(func.args)

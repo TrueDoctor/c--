@@ -27,10 +27,22 @@ class Func(AstNode):
         self.block = block
 
 
+class Struct(AstNode):
+    def __init__(self, line, name, members):
+        super().__init__(line)
+        self.name = name
+        self.members = members
+
+
 class Type(AstNode):
     def __init__(self, line, type_name):
         super().__init__(line)
-        self.type = type_name
+        self.name = type_name
+
+
+class StructType(Type):
+    def __init__(self, line, name):
+        super().__init__(line, 'struct ' + name)
 
 
 # statements
