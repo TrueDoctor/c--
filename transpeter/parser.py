@@ -41,14 +41,14 @@ class Parser:
                         self.tokens.next()
                         expr = self.parse_expr()
                         self.expect(';')
-                        instr.append(ast.Decl(var_type.line, var_type, name, expr))
+                        instr.append(ast.Declaration(var_type.line, var_type, name, expr))
                     elif self.tokens.peek == ';':  # declaration without initialization
                         self.tokens.next()
-                        instr.append(ast.Decl(var_type.line, var_type, name))
+                        instr.append(ast.Declaration(var_type.line, var_type, name))
                     else:  # function
                         args = self.parse_func_args()
                         block = self.parse_block()
-                        instr.append(ast.Func(var_type.line, var_type, name, args, block))
+                        instr.append(ast.Function(var_type.line, var_type, name, args, block))
             else:  # statement
                 instr.append(self.parse_statement())
         tree = ast.Program(program, instr)
@@ -67,12 +67,12 @@ class Parser:
         if self.tokens.peek != ')':
             arg_type = self.parse_type()
             name = self.expect('id').value
-            args.append(ast.Decl(arg_type.line, arg_type, name))
+            args.append(ast.Declaration(arg_type.line, arg_type, name))
         while self.tokens.peek != ')':
             self.expect(',')
             arg_type = self.parse_type()
             name = self.expect('id').value
-            args.append(ast.Decl(arg_type.line, arg_type, name))
+            args.append(ast.Declaration(arg_type.line, arg_type, name))
         self.tokens.next()
         return args
 
@@ -84,7 +84,7 @@ class Parser:
             self.tokens.next()
             expr = self.parse_expr()
         self.expect(';')
-        return ast.Decl(var_type.line, var_type, name, init=expr)
+        return ast.Declaration(var_type.line, var_type, name, init=expr)
 
     def parse_block(self):  # blocks
         line = self.expect('{').line

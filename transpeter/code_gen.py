@@ -16,7 +16,7 @@ class CodeGenerator:
         self.func_nodes = {}
         self.program = ast.Program(tree.name, [])
         for node in tree.instr_list:
-            if isinstance(node, ast.Func):
+            if isinstance(node, ast.Function):
                 if node.name in self.func_nodes:
                     raise CodeGenError(f'line {node.line}: function \'{node.name}\' defined twice')
                 self.func_nodes[node.name] = node
@@ -48,7 +48,7 @@ class CodeGenerator:
         return f'[{self.program.name}]\n{code}'
 
     def gen_stmnt(self, tree):
-        if isinstance(tree, ast.Decl):
+        if isinstance(tree, ast.Declaration):
             if tree.type.name == 'void':
                 raise CodeGenError(f'line {tree.line}: variable \'{tree.name}\' declared void')
             if tree.name in self.var_map[-1]:
@@ -56,7 +56,7 @@ class CodeGenerator:
             code = ''
             if tree.init is not None:
                 code += self.eval_expr(tree.init)
-            self.var_map[-1][tree.name] = Variable(repr(tree.type), self.stack_ptr)
+            self.var_map[-1][tree.name] = Variable(tree.type, self.stack_ptr)  # TODO
             self.stack_ptr += 1  # TODO: change for structs
             return code + '>'
         elif isinstance(tree, ast.Block):

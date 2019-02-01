@@ -10,7 +10,7 @@ class Program(AstNode):
         self.instr_list = instructions
 
 
-class Decl(AstNode):
+class Declaration(AstNode):
     def __init__(self, line, var_type, name, init=None):
         super().__init__(line)
         self.type = var_type
@@ -18,7 +18,7 @@ class Decl(AstNode):
         self.init = init
 
 
-class Func(AstNode):
+class Function(AstNode):
     def __init__(self, line, return_type, name, args, block):
         super().__init__(line)
         self.type = return_type
@@ -41,8 +41,7 @@ class Type(AstNode):
 
 
 class StructType(Type):
-    def __init__(self, line, name):
-        super().__init__(line, 'struct ' + name)
+    pass
 
 
 # statements
