@@ -61,24 +61,23 @@ class Struct:
 def print_tree(tree, prefix=''):
     if isinstance(tree, AstNode):
         print(tree.__class__.__name__)
-        size = len(vars(tree))
-        for i, (k, v) in enumerate(vars(tree).items()):
-            if k != 'line':
-                print(prefix, end='')
-                if i == size - 1:
-                    print('\u2514\u2500', end='')
-                    print('{}: '.format(k), end='')
-                    print_tree(v, prefix + '  ')
-                else:
-                    print('\u251c\u2500', end='')
-                    print('{}: '.format(k), end='')
-                    print_tree(v, prefix + '\u2502 ')
+        size = len(tree.__print__()) - 1
+        for i, (k, v) in enumerate(tree.__print__().items()):
+            print(prefix, end='')
+            if i == size:
+                print('\u2514\u2500', end='')
+                print('{}: '.format(k), end='')
+                print_tree(v, prefix + '  ')
+            else:
+                print('\u251c\u2500', end='')
+                print('{}: '.format(k), end='')
+                print_tree(v, prefix + '\u2502 ')
     elif isinstance(tree, list):
         print()
-        size = len(tree)
+        size = len(tree) - 1
         for i, node in enumerate(tree):
             print(prefix, end='')
-            if i == size - 1:
+            if i == size:
                 print('\u2514\u2500', end='')
                 print_tree(node, prefix + '  ')
             else:
