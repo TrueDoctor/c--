@@ -68,12 +68,16 @@ class CodeGenerator:
             self.stack_ptr -= old_vars
             return code + '<' * old_vars
         elif isinstance(tree, ast.If):
+            if tree.else_stmnt is None:
+                expr = self.eval_expr(tree.cond)
+                stmnt = self.gen_stmnt(tree.stmnt)
+                return f'{expr}[{stmnt}[-]]'
+            self.stack_ptr += 1
             expr = self.eval_expr(tree.cond)
             stmnt = self.gen_stmnt(tree.stmnt)
-            if tree.else_stmnt is not None:
-                else_stmnt = self.gen_stmnt(tree.else_stmnt)
-                return f'{expr}>[-]+<[{stmnt}>[-]<[-]]>[{else_stmnt}[-]]<'
-            return f'{expr}[{stmnt}[-]]'
+            self.stack_ptr -= 1
+            else_stmnt = self.gen_stmnt(tree.else_stmnt)
+            return f'[-]+>{expr}[{stmnt}<[-]>[-]]<[{else_stmnt}[-]]'
         elif isinstance(tree, ast.While):
             expr = self.eval_expr(tree.cond)
             stmnt = self.gen_stmnt(tree.stmnt)
