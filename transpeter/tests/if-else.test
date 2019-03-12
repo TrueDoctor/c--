@@ -1,0 +1,24 @@
+if (true) {
+    int i = '~';
+    putchar(i);
+}
+
+if (false) {
+    int x = 1 / 0;
+}
+
+if (true) {
+    int i = '!';
+    putchar(i);
+} else {
+    int x = 0 / 0;
+}
+
+if (false) {
+    int f = 0 % 0;
+} else {
+    int i = '&';
+    putchar(i);
+}
+
+putchar('\n');
