@@ -49,28 +49,31 @@ class Function:
 def print_tree(tree, prefix=''):
     if isinstance(tree, AstNode):
         print(tree.__class__.__name__)
-        size = len(vars(tree))
-        for i, (k, v) in enumerate(vars(tree).items()):
-            if k != 'line':
-                print(prefix, end='')
-                if i == size - 1:
-                    print('\u2514\u2500', end='')
-                    print('{}: '.format(k), end='')
-                    print_tree(v, prefix + '  ')
-                else:
-                    print('\u251c\u2500', end='')
-                    print('{}: '.format(k), end='')
-                    print_tree(v, prefix + '\u2502 ')
-    elif isinstance(tree, list):
-        print()
-        size = len(tree)
-        for i, node in enumerate(tree):
+        attrs = tree.__print__()
+        size = len(attrs)
+        for i, (k, v) in enumerate(attrs.items()):
             print(prefix, end='')
             if i == size - 1:
                 print('\u2514\u2500', end='')
-                print_tree(node, prefix + '  ')
+                print('{}: '.format(k), end='')
+                print_tree(v, prefix + '  ')
             else:
                 print('\u251c\u2500', end='')
-                print_tree(node, prefix + '\u2502 ')
+                print('{}: '.format(k), end='')
+                print_tree(v, prefix + '\u2502 ')
+    elif isinstance(tree, list):
+        size = len(tree)
+        if size == 0:
+            print(None)
+        else:
+            print()
+            for i, node in enumerate(tree):
+                print(prefix, end='')
+                if i == size - 1:
+                    print('\u2514\u2500', end='')
+                    print_tree(node, prefix + '  ')
+                else:
+                    print('\u251c\u2500', end='')
+                    print_tree(node, prefix + '\u2502 ')
     else:
         print(tree)
