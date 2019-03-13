@@ -38,12 +38,13 @@ class Peekable:
 
 
 class Function:
-    def __init__(self, node):
-        self.node = node
-        self.code = None
+    def __init__(self, args, return_type, code=None):
+        self.args = args
+        self.type = return_type
+        self.code = code
 
     def __repr__(self):
-        return f'Function({self.node}, {self.code})'
+        return f'Function(args={self.args}, type={self.type}, code={self.code})'
 
 
 def print_tree(tree, prefix=''):

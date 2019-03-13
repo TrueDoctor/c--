@@ -11,23 +11,26 @@ class CodeGenError(CompilerError):
 class CodeGenerator:
     def __init__(self, tree, stdlib=None):
         self.current_funcs = []
-        self.funcs = {} if stdlib is None else stdlib
+        self.functions = {} if stdlib is None else stdlib
+        self.function_nodes = {}
         self.program = ast.Program(tree.name, [])
         for node in tree.instr_list:
             if isinstance(node, ast.Func):
-                if node.name in self.funcs:
-                    raise CodeGenError(f'line {node.line}: function \'{node.name}\' defined twice')
-                self.funcs[node.name] = Function(node)
+                name = node.name
+                if name in self.function_nodes:
+                    raise CodeGenError(f'line {node.line}: function \'{name}\' defined twice')
+                self.function_nodes[name] = node
+                self.functions[name] = Function(len(node.args), node.type)
             else:
                 self.program.instr_list.append(node)
         self.var_map = [{}]
         self.stack_ptr = 0
 
     def generate(self, optimize=False, n=80):
-        for func in self.funcs.values():
+        for name, func in self.functions.items():
             if func.code is None:
-                self.current_funcs.append(func.node.name)
-                func.code = self.inline_function(func.node)
+                self.current_funcs.append(name)
+                func.code = self.inline_function(self.function_nodes[name])
                 self.current_funcs.pop()
         code = ''
         for node in self.program.instr_list:
@@ -202,13 +205,13 @@ class CodeGenerator:
         if node.name in self.current_funcs:
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' is recursive')
         self.current_funcs.append(node.name)
-        if node.name not in self.funcs:
+        if node.name not in self.functions:
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' not defined')
-        func = self.funcs[node.name]
-        if expr and func.node.type == 'void':
+        func = self.functions[node.name]
+        if expr and func.type == 'void':
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' returns void')
         args = len(node.args)
-        params = len(func.node.args)
+        params = func.args
         if args != params:
             raise CodeGenError(f'line {node.line}: function \'{node.name}\' expects {params} arguments, got {args}')
         code = ''
@@ -218,6 +221,6 @@ class CodeGenerator:
         code += '<' * args
         self.stack_ptr -= args
         if func.code is None:
-            func.code = self.inline_function(func.node)
+            func.code = self.inline_function(self.function_nodes[node.name])
         self.current_funcs.pop()
         return code + func.code
