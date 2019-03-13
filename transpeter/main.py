@@ -9,11 +9,10 @@ from parser import Parser
 from code_gen import CodeGenerator
 from utils import print_tree, CompilerError
 
-path = os.path.dirname(__file__)
-stdlib_src = os.path.join(path, 'std.lib')
-
 
 def load_stdlib():
+    path = os.path.dirname(__file__)
+    stdlib_src = os.path.join(path, 'std.lib')
     try:
         with open(stdlib_src) as stdlib_src_file:
             stdlib_src_code = stdlib_src_file.read()
@@ -25,15 +24,14 @@ def load_stdlib():
         with open(file_name, 'rb') as f:
             return pickle.load(f)
     else:
-        lexer = Lexer()
-        tokens = lexer.tokenize(stdlib_src_code)
+        tokens = Lexer().tokenize(stdlib_src_code)
         tree = Parser(tokens).parse('stdlib')
         code_generator = CodeGenerator(tree)
         code_generator.generate()
-        stdlib = code_generator.functions
+        functions = code_generator.functions
         with open(file_name, 'wb') as f:
             pickle.dump(stdlib, f, pickle.HIGHEST_PROTOCOL)
-        return stdlib
+        return functions
 
 
 if __name__ == "__main__":
@@ -52,24 +50,17 @@ if __name__ == "__main__":
         print(e, file=sys.stderr)
         sys.exit(arg_parser.format_usage())
     try:
-        lex = Lexer()
         stdlib = load_stdlib()
-        tokens = lex.tokenize(code)
-        parser = Parser(tokens)
-        tree = parser.parse(os.path.basename(args.src))
-        code_generator = CodeGenerator(tree, stdlib)
-        code = code_generator.generate(args.optimize)
+        tokens = Lexer().tokenize(code)
+        tree = Parser(tokens).parse(os.path.basename(args.src))
+        code = CodeGenerator(tree, stdlib).generate(args.optimize)
         if args.tree:
             print_tree(tree)
             if args.dest is None:
                 print()
         if args.dest is not None:
-            try:
-                with open(args.dest, 'w') as out_file:
-                    out_file.write(code)
-            except OSError as e:
-                print(e, file=sys.stderr)
-                sys.exit(arg_parser.format_usage())
+            with open(args.dest, 'w') as out_file:
+                out_file.write(code)
         else:
             print(code)
     except CompilerError as e:
