@@ -38,7 +38,7 @@ class Func(AstNode):
         self.block = block
 
     def __print__(self):
-        return {'type': self.type, 'name': self.name, 'args': self.args, 'statements': block.stmnt_list}
+        return {'type': self.type, 'name': self.name, 'args': self.args, 'statements': self.block.stmnt_list}
 
 
 # statements
