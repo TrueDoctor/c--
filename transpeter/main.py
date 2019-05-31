@@ -19,6 +19,7 @@ def load_stdlib():
     except OSError as e:
         print('an error occured while loading stdlib', file=sys.stderr)
         sys.exit(e)
+
     file_name = os.path.join(path, 'stdlib_' + hashlib.md5(stdlib_src_code.encode()).hexdigest()[0:8] + '.pkl')
     if os.path.exists(file_name) and not args.recompile:
         with open(file_name, 'rb') as f:
@@ -30,7 +31,7 @@ def load_stdlib():
         code_generator.generate()
         functions = code_generator.functions
         with open(file_name, 'wb') as f:
-            pickle.dump(stdlib, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(functions, f, pickle.HIGHEST_PROTOCOL)
         return functions
 
 
