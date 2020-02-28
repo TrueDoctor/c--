@@ -1,26 +1,44 @@
-from astnode import AstNode
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Any, Optional
+
+from astnode import AstNode, Program
 
 
 class CompilerError(Exception):
     pass
 
 
+class TokenType(Enum):
+    IDENTIFIER = 'identifier'
+    TYPE = 'type'
+    OPERATOR = 'operator'
+    SEPARATOR = 'separator'
+    INT = 'int'
+    IF = 'if'
+    ELSE = 'else'
+    WHILE = 'while'
+    REPEAT = 'repeat'
+    RETURN = 'return'
+    INLINE = 'inline'
+
+
+@dataclass
 class Token:
-    __slots__ = ['type', 'value', 'line']
+    line: int
+    type: TokenType
+    value: Any
 
-    def __init__(self, token_type, value, line):
-        self.type = token_type
-        self.value = value
-        self.line = line
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '{}: \'{}\''.format(self.type, self.value)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, Token):
             return self.type == other.type
-        else:
+        elif isinstance(other, TokenType):
             return self.type == other
+        else:
+            return self.value == other
 
 
 class Peekable:
@@ -37,18 +55,15 @@ class Peekable:
         return temp
 
 
+@dataclass
 class Function:
-    def __init__(self, args, return_type, code=None):
-        self.args = args
-        self.type = return_type
-        self.code = code
-
-    def __repr__(self):
-        return f'Function(args={self.args}, type={self.type}, code={self.code})'
+    args: int
+    return_type: str
+    code: Optional[str] = None
 
 
-def print_tree(tree, prefix=''):
-    if isinstance(tree, AstNode):
+def print_tree(tree, prefix: str = ''):
+    if isinstance(tree, (AstNode, Program)):
         print(tree.__class__.__name__)
         attrs = tree.__print__()
         size = len(attrs)

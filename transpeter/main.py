@@ -1,16 +1,18 @@
+import re
 import sys
 import os.path
 import pickle
 import hashlib
 from argparse import ArgumentParser
+from typing import Dict
 
 from lexer import Lexer
 from parser import Parser
 from code_gen import CodeGenerator
-from utils import print_tree, CompilerError
+from utils import print_tree, CompilerError, Function
 
 
-def load_stdlib():
+def load_stdlib() -> Dict[str, Function]:
     path = os.path.dirname(__file__)
     stdlib_src = os.path.join(path, 'std.lib')
     try:
@@ -30,6 +32,9 @@ def load_stdlib():
         code_generator = CodeGenerator(tree)
         code_generator.generate()
         functions = code_generator.functions
+        for func in functions.values():
+            while re.search(r'\+-|-\+|<>|><', func.code):
+                func.code = re.sub(r'\+-|-\+|<>|><', '', func.code)
         with open(file_name, 'wb') as f:
             pickle.dump(functions, f, pickle.HIGHEST_PROTOCOL)
         return functions

@@ -1,6 +1,7 @@
 import re
+from typing import Iterable
 
-from utils import Token, CompilerError
+from utils import Token, TokenType, CompilerError
 
 
 class LexerError(CompilerError):
@@ -8,10 +9,12 @@ class LexerError(CompilerError):
 
 
 class Lexer:
+    __slots__ = ['pattern', 'inline']
+
     ops = ['+=', '+', '-=', '-', '*=', '*', '/=', '/', '%=', '%', '==', '!=', '>=', '<=', '>', '<', 'or', 'and', 'not']
     separators = ['=', '{', '}', '(', ')', ';', ',']
     types = ['void', 'int']
-    control = ['if', 'else', 'while', 'repeat', 'return', 'inline']
+    keywords = ['if', 'else', 'while', 'repeat', 'return', 'inline']
     escape = [r'\n', r'\r', r'\t', r'\b']
 
     def __init__(self):
@@ -25,7 +28,7 @@ class Lexer:
         self.pattern = re.compile(r'\s*(?:{})'.format('|'.join(regex)))
         self.inline = re.compile(r'((?:.|\s)*?);')
 
-    def tokenize(self, program):
+    def tokenize(self, program: str) -> Iterable[Token]:
         program = re.sub(r'#.*', '', program).rstrip()
         pos = 0
         line = 1
@@ -38,7 +41,9 @@ class Lexer:
             line += program[match.start():match.end()].count('\n')
             for k, v in match.groupdict().items():
                 if v:
+                    token_type = TokenType.IDENTIFIER
                     if k == 'int':
+                        token_type = TokenType.INT
                         if v == 'true':
                             v = 1
                         elif v == 'false':
@@ -46,14 +51,13 @@ class Lexer:
                         else:
                             v = int(v)
                     elif k == 'char':
-                        k = 'int'
+                        token_type = TokenType.INT
                         v = ord(v)
                     elif k == 'id' and v in Lexer.types:
-                        k = 'type'
-                    # if the token is an operator, a separator or a keyword
-                    # k is set to v for easier parsing
-                    elif k == 'id' and v in Lexer.control:
-                        k = v
+                        token_type = TokenType.TYPE
+                    # v is set to k for keywords
+                    elif k == 'id' and v in Lexer.keywords:
+                        token_type = TokenType(v)
                         if v == 'inline':
                             inline = self.inline.match(program, pos)
                             if not inline:
@@ -61,7 +65,9 @@ class Lexer:
                             pos = inline.end()
                             line += program[inline.start():inline.end()].count('\n')
                             v = re.sub(r'[^+\-><\[\].,]', '', inline[1])
-                    elif k == 'op' or k == 'sep':
-                        k = v
-                    yield Token(k, v, line)
+                    elif k == 'op':
+                        token_type = TokenType.OPERATOR
+                    elif k == 'sep':
+                        token_type = TokenType.SEPARATOR
+                    yield Token(line, token_type, v)
                     break

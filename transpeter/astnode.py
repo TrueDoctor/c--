@@ -1,163 +1,154 @@
-class AstNode:
-    def __init__(self, line):
-        self.line = line
+from dataclasses import dataclass
+from typing import List, Optional
 
-    def __print__(self):
+
+@dataclass
+class AstNode:
+    line: int
+
+    def __print__(self) -> dict:
         return {}
 
 
-class Program(AstNode):
-    def __init__(self, name, instructions):
-        super().__init__(0)
-        self.name = name
-        self.instr_list = instructions
+@dataclass
+class Program:
+    name: str
+    instructions: List[AstNode]
 
-    def __print__(self):
-        return {'name': self.name, 'instructions': self.instr_list}
+    def __print__(self) -> dict:
+        return {'name': self.name, 'instructions': self.instructions}
 
 
-class Decl(AstNode):
-    def __init__(self, line, var_type, name, init=None):
-        super().__init__(line)
-        self.type = var_type
-        self.name = name
-        self.init = init
+@dataclass
+class Declaration(AstNode):
+    type: str
+    name: str
+    init: Optional[AstNode] = None
 
-    def __print__(self):
+    def __print__(self) -> dict:
         if self.init is None:
             return {'type': self.type, 'name': self.name}
         return {'type': self.type, 'name': self.name, 'init': self.init}
 
 
+@dataclass
 class Func(AstNode):
-    def __init__(self, line, return_type, name, args, block):
-        super().__init__(line)
-        self.type = return_type
-        self.name = name
-        self.args = args
-        self.block = block
+    return_type: str
+    name: str
+    args: List[Declaration]
+    block: 'Block'
 
-    def __print__(self):
-        return {'type': self.type, 'name': self.name, 'args': self.args, 'statements': self.block.stmnt_list}
+    def __print__(self) -> dict:
+        return {'type': self.return_type, 'name': self.name, 'args': self.args, 'statements': self.block.statements}
 
 
 # statements
+
+@dataclass
 class Block(AstNode):
-    def __init__(self, line, statements):
-        super().__init__(line)
-        self.stmnt_list = statements
+    statements: List[AstNode]
 
-    def __print__(self):
-        return {'statements': self.stmnt_list}
+    def __print__(self) -> dict:
+        return {'statements': self.statements}
 
 
+@dataclass
 class If(AstNode):
-    def __init__(self, line, cond, statement, else_stmnt=None):
-        super().__init__(line)
-        self.cond = cond
-        self.stmnt = statement
-        self.else_stmnt = else_stmnt
+    condition: AstNode
+    statement: AstNode
+    else_statement: Optional[AstNode] = None
 
-    def __print__(self):
-        if self.else_stmnt is None:
-            return {'condition': self.cond, 'statement': self.stmnt}
-        return {'condition': self.cond, 'statement': self.stmnt, 'else statement': self.else_stmnt}
+    def __print__(self) -> dict:
+        if self.else_statement is None:
+            return {'condition': self.condition, 'statement': self.statement}
+        return {'condition': self.condition, 'statement': self.statement, 'else statement': self.else_statement}
 
 
+@dataclass
 class While(AstNode):
-    def __init__(self, line, cond, statement):
-        super().__init__(line)
-        self.cond = cond
-        self.stmnt = statement
+    condition: AstNode
+    statement: AstNode
 
-    def __print__(self):
-        return {'condition': self.cond, 'statement': self.stmnt}
+    def __print__(self) -> dict:
+        return {'condition': self.condition, 'statement': self.statement}
 
 
+@dataclass
 class Repeat(AstNode):
-    def __init__(self, line, cond, statement):
-        super().__init__(line)
-        self.cond = cond
-        self.stmnt = statement
+    condition: AstNode
+    statement: AstNode
 
-    def __print__(self):
-        return {'condition': self.cond, 'statement': self.stmnt}
+    def __print__(self) -> dict:
+        return {'condition': self.condition, 'statement': self.statement}
 
 
+@dataclass
 class Return(AstNode):
-    def __init__(self, line, expr):
-        super().__init__(line)
-        self.expr = expr
+    expression: AstNode
 
-    def __print__(self):
-        return {'expression': self.expr}
+    def __print__(self) -> dict:
+        return {'expression': self.expression}
 
 
+@dataclass
 class Inline(AstNode):
-    def __init__(self, line, expr):
-        super().__init__(line)
-        self.expr = expr
+    expression: str
 
-    def __print__(self):
-        return {'code': self.expr}
+    def __print__(self) -> dict:
+        return {'code': self.expression}
 
 
+@dataclass
 class Assign(AstNode):
-    def __init__(self, line, op, var, expr):
-        super().__init__(line)
-        self.op = op
-        self.var = var
-        self.expr = expr
+    op: str
+    var: str
+    expression: AstNode
 
-    def __print__(self):
-        return {'operator': self.op, 'variable': self.var, 'expression': self.expr}
+    def __print__(self) -> dict:
+        return {'operator': self.op, 'variable': self.var, 'expression': self.expression}
 
 
+@dataclass
 class FuncCall(AstNode):
-    def __init__(self, line, name, args):
-        super().__init__(line)
-        self.name = name
-        self.args = args
+    name: str
+    args: List[AstNode]
 
-    def __print__(self):
+    def __print__(self) -> dict:
         return {'name': self.name, 'args': self.args}
 
 
 # expressions
-class BinOp(AstNode):
-    def __init__(self, line, op, left, right):
-        super().__init__(line)
-        self.op = op
-        self.left = left
-        self.right = right
 
-    def __print__(self):
+@dataclass
+class BinOp(AstNode):
+    op: str
+    left: AstNode
+    right: AstNode
+
+    def __print__(self) -> dict:
         return {'operator': self.op, 'left': self.left, 'right': self.right}
 
 
+@dataclass
 class UnOp(AstNode):
-    def __init__(self, line, op, right):
-        super().__init__(line)
-        self.op = op
-        self.right = right
+    op: str
+    right: AstNode
 
-    def __print__(self):
+    def __print__(self) -> dict:
         return {'operator': self.op, 'expression': self.right}
 
 
+@dataclass
 class Var(AstNode):
-    def __init__(self, line, name):
-        super().__init__(line)
-        self.name = name
+    name: str
 
-    def __print__(self):
+    def __print__(self) -> dict:
         return {'name': self.name}
 
 
+@dataclass
 class Int(AstNode):
-    def __init__(self, line, value):
-        super().__init__(line)
-        self.value = value
+    value: int
 
-    def __print__(self):
+    def __print__(self) -> dict:
         return {'value': self.value}
