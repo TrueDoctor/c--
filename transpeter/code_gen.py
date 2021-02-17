@@ -28,11 +28,13 @@ class CodeGenerator:
         self.stack_ptr = 0
 
     def generate(self, optimize=False, n=80):
+        # generate code for functions
         for name, func in self.functions.items():
             if func.code is None:
                 self.current_funcs.append(name)
                 func.code = self.inline_function(self.function_nodes[name])
                 self.current_funcs.pop()
+        # generate code for program
         code = ''
         for node in self.program.instructions:
             code += self.gen_statement(node)

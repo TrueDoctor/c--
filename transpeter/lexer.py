@@ -15,7 +15,10 @@ class Lexer:
     separators = ['=', '{', '}', '(', ')', ';', ',']
     types = ['void', 'int']
     keywords = ['if', 'else', 'while', 'repeat', 'return', 'inline']
-    escape = [r'\n', r'\r', r'\t', r'\b']
+    escape = {
+        r'\a': '\a', r'\b': '\b', r'\f': '\f', r'\n': '\n', r'\r': '\r', r'\t': '\t', r'\v': '\v',
+        r'\'': '\'', r'\"': '\"', r'\\': '\\'
+    }
 
     def __init__(self):
         regex = [
@@ -52,6 +55,8 @@ class Lexer:
                             v = int(v)
                     elif k == 'char':
                         token_type = TokenType.INT
+                        if v in Lexer.escape:
+                            v = Lexer.escape[v]
                         v = ord(v)
                     elif k == 'id' and v in Lexer.types:
                         token_type = TokenType.TYPE
