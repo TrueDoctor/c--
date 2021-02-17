@@ -1,26 +1,44 @@
-from astnode import AstNode
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Any, Optional
+
+from astnode import AstNode, Program
 
 
 class CompilerError(Exception):
     pass
 
 
+class TokenType(Enum):
+    IDENTIFIER = 'identifier'
+    TYPE = 'type'
+    OPERATOR = 'operator'
+    SEPARATOR = 'separator'
+    INT = 'int'
+    IF = 'if'
+    ELSE = 'else'
+    WHILE = 'while'
+    REPEAT = 'repeat'
+    RETURN = 'return'
+    INLINE = 'inline'
+
+
+@dataclass
 class Token:
-    __slots__ = ['type', 'value', 'line']
+    line: int
+    type: TokenType
+    value: Any
 
-    def __init__(self, token_type, value, line):
-        self.type = token_type
-        self.value = value
-        self.line = line
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '{}: \'{}\''.format(self.type, self.value)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, Token):
             return self.type == other.type
-        else:
+        elif isinstance(other, TokenType):
             return self.type == other
+        else:
+            return self.value == other
 
 
 class Peekable:
@@ -37,34 +55,21 @@ class Peekable:
         return temp
 
 
-class Variable:
-    def __init__(self, var_type, address):
-        self.type = var_type
-        self.addr = address
-
-    def __repr__(self):
-        return f'{self.type} at {self.addr}'
-
-
+@dataclass
 class Function:
-    def __init__(self, node):
-        self.code = None
-        self.args = [arg.type for arg in node.args]
-        self.type = node.type
+    args: int
+    return_type: str
+    code: Optional[str] = None
 
 
-class Struct:
-    def __init__(self, members):
-        self.members = members
-
-
-def print_tree(tree, prefix=''):
-    if isinstance(tree, AstNode):
+def print_tree(tree, prefix: str = ''):
+    if isinstance(tree, (AstNode, Program)):
         print(tree.__class__.__name__)
-        size = len(tree.__print__()) - 1
-        for i, (k, v) in enumerate(tree.__print__().items()):
+        attrs = tree.__print__()
+        size = len(attrs)
+        for i, (k, v) in enumerate(attrs.items()):
             print(prefix, end='')
-            if i == size:
+            if i == size - 1:
                 print('\u2514\u2500', end='')
                 print('{}: '.format(k), end='')
                 print_tree(v, prefix + '  ')
@@ -73,15 +78,18 @@ def print_tree(tree, prefix=''):
                 print('{}: '.format(k), end='')
                 print_tree(v, prefix + '\u2502 ')
     elif isinstance(tree, list):
-        print()
-        size = len(tree) - 1
-        for i, node in enumerate(tree):
-            print(prefix, end='')
-            if i == size:
-                print('\u2514\u2500', end='')
-                print_tree(node, prefix + '  ')
-            else:
-                print('\u251c\u2500', end='')
-                print_tree(node, prefix + '\u2502 ')
+        size = len(tree)
+        if size == 0:
+            print(None)
+        else:
+            print()
+            for i, node in enumerate(tree):
+                print(prefix, end='')
+                if i == size - 1:
+                    print('\u2514\u2500', end='')
+                    print_tree(node, prefix + '  ')
+                else:
+                    print('\u251c\u2500', end='')
+                    print_tree(node, prefix + '\u2502 ')
     else:
         print(tree)
