@@ -23,3 +23,6 @@ inter-fuck
 
 # outputs from the Nix package manager
 result
+
+# transpeter-rs
+transpeter-rs/target
