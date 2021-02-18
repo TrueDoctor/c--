@@ -1,5 +1,5 @@
-mod error;
 mod lexer;
+mod util;
 
 use std::{fs, io};
 

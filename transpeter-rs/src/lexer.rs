@@ -1,6 +1,6 @@
 use std::{iter::Peekable, str::CharIndices};
 
-use crate::error::*;
+use crate::util::*;
 
 #[derive(Debug)]
 pub enum TokenType {
@@ -47,13 +47,13 @@ pub enum TokenType {
 #[derive(Debug)]
 pub struct Token {
     pub token_type: TokenType,
-    pub line: usize,
+    pub pos: Position,
 }
 
 pub struct Lexer<'a> {
     program: &'a str,
     iter: Peekable<CharIndices<'a>>,
-    line_number: usize,
+    pos: Position,
     done: bool,
 }
 
@@ -62,7 +62,7 @@ impl<'a> Lexer<'a> {
         Lexer {
             program,
             iter: program.char_indices().peekable(),
-            line_number: 1,
+            pos: Position::new(),
             done: false,
         }
     }
@@ -70,13 +70,13 @@ impl<'a> Lexer<'a> {
     fn token(&self, tt: TokenType) -> Option<Result<Token, CompilerError>> {
         Some(Ok(Token {
             token_type: tt,
-            line: self.line_number,
+            pos: self.pos,
         }))
     }
 
     fn error(&mut self, msg: &str) -> Option<Result<Token, CompilerError>> {
         self.done = true;
-        Some(Err(CompilerError::new(msg, self.line_number)))
+        Some(Err(CompilerError::new(msg, self.pos)))
     }
 
     fn consume_while(&mut self, pred: impl Fn(char) -> bool) -> usize {
@@ -116,7 +116,7 @@ impl Iterator for Lexer<'_> {
         while let Some((i, next)) = self.iter.next() {
             match next {
                 // newline
-                '\n' => self.line_number += 1,
+                '\n' => self.pos.inc_line(),
                 // whitespace
                 x if x.is_ascii_whitespace() => {}
                 // comment
