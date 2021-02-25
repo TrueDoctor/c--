@@ -1,54 +1,7 @@
 use std::{iter::Peekable, str::CharIndices};
 
+use crate::token::*;
 use crate::util::*;
-
-#[derive(Debug)]
-pub enum TokenType {
-    Identifier(String),
-    Type(String),
-    IntLiteral(u8),
-    // keywords
-    If,
-    Else,
-    While,
-    Repeat,
-    Return,
-    Inline(String),
-    And,
-    Or,
-    Not,
-    // separators
-    LeftParen,
-    RightParen,
-    LeftBrace,
-    RightBrace,
-    Comma,
-    Semicolon,
-    // operators
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    Percent,
-    Eq,
-    PlusEq,
-    MinusEq,
-    StarEq,
-    SlashEq,
-    PercentEq,
-    EqEq,
-    NotEq,
-    Greater,
-    GreaterEq,
-    Less,
-    LessEq,
-}
-
-#[derive(Debug)]
-pub struct Token {
-    pub token_type: TokenType,
-    pub pos: Position,
-}
 
 pub struct Lexer<'a> {
     program: &'a str,
@@ -59,7 +12,7 @@ pub struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     pub fn new(program: &'a str) -> Self {
-        Lexer {
+        Self {
             program,
             iter: program.char_indices().peekable(),
             pos: Position::new(),
@@ -67,16 +20,17 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn token(&self, tt: TokenType) -> Option<Result<Token, CompilerError>> {
-        Some(Ok(Token {
+    fn token(&self, tt: TokenType, i: usize, j: usize) -> CompilerResult<Token<'a>> {
+        Ok(Token {
             token_type: tt,
+            value: &self.program[i..j],
             pos: self.pos,
-        }))
+        })
     }
 
-    fn error(&mut self, msg: &str) -> Option<Result<Token, CompilerError>> {
+    fn error(&mut self, msg: &str) -> CompilerResult<Token<'a>> {
         self.done = true;
-        Some(Err(CompilerError::new(msg, self.pos)))
+        Err(CompilerError::with_pos(msg, self.pos))
     }
 
     fn consume_while(&mut self, pred: impl Fn(char) -> bool) -> usize {
@@ -101,15 +55,11 @@ impl<'a> Lexer<'a> {
         }
         false
     }
-}
 
-impl Iterator for Lexer<'_> {
-    type Item = Result<Token, CompilerError>;
-
-    fn next(&mut self) -> Option<Self::Item> {
+    pub fn next_token(&mut self) -> CompilerResult<Token<'a>> {
         // short-circuit if lexer is already done
         if self.done {
-            return None;
+            return self.token(TokenType::Eof, 0, 0);
         }
 
         // consume characters until a token (or an error) is returned
@@ -134,7 +84,7 @@ impl Iterator for Lexer<'_> {
                         "repeat" => TokenType::Repeat,
                         "return" => TokenType::Return,
                         "inline" => {
-                            // read inline brainfuck code
+                            // TODO: read inline brainfuck code
                             let k = self.consume_while(|c| c != ';');
                             let mut code = String::new();
                             for c in self.program[j..k].chars() {
@@ -143,93 +93,90 @@ impl Iterator for Lexer<'_> {
                                     _ => {}
                                 }
                             }
-                            TokenType::Inline(code)
+                            TokenType::Inline
                         }
-                        "void" | "int" => TokenType::Type(ident.to_string()),
+                        "void" | "int" => TokenType::Type,
                         "and" => TokenType::And,
                         "or" => TokenType::Or,
                         "not" => TokenType::Not,
-                        _ => TokenType::Identifier(ident.to_string()),
+                        _ => TokenType::Identifier,
                     };
-                    return self.token(tt);
+                    return self.token(tt, i, j);
                 }
                 // integer literal
                 x if x.is_ascii_digit() => {
                     let j = self.consume_while(|c| c.is_ascii_digit());
-                    return match self.program[i..j].parse::<u8>().ok() {
-                        Some(value) => self.token(TokenType::IntLiteral(value)),
-                        None => self.error("integer literal too big"),
-                    };
+                    return self.token(TokenType::IntLiteral, i, j);
                 }
                 // char literal
                 '\'' => {} // TODO: implement
                 // separators
-                '(' => return self.token(TokenType::LeftParen),
-                ')' => return self.token(TokenType::RightParen),
-                '{' => return self.token(TokenType::LeftBrace),
-                '}' => return self.token(TokenType::RightBrace),
-                ',' => return self.token(TokenType::Comma),
-                ';' => return self.token(TokenType::Semicolon),
+                '(' => return self.token(TokenType::LeftParen, i, i + 1),
+                ')' => return self.token(TokenType::RightParen, i, i + 1),
+                '{' => return self.token(TokenType::LeftBrace, i, i + 1),
+                '}' => return self.token(TokenType::RightBrace, i, i + 1),
+                ',' => return self.token(TokenType::Comma, i, i + 1),
+                ';' => return self.token(TokenType::Semicolon, i, i + 1),
                 // operators
                 '=' => {
                     return if self.consume_if(|c| c == '=') {
-                        self.token(TokenType::EqEq)
+                        self.token(TokenType::EqEq, i, i + 2)
                     } else {
-                        self.token(TokenType::Eq)
+                        self.token(TokenType::Eq, i, i + 1)
                     };
                 }
                 '+' => {
                     return if self.consume_if(|c| c == '=') {
-                        self.token(TokenType::PlusEq)
+                        self.token(TokenType::PlusEq, i, i + 2)
                     } else {
-                        self.token(TokenType::Plus)
+                        self.token(TokenType::Plus, i, i + 1)
                     };
                 }
                 '-' => {
                     return if self.consume_if(|c| c == '=') {
-                        self.token(TokenType::MinusEq)
+                        self.token(TokenType::MinusEq, i, i + 2)
                     } else {
-                        self.token(TokenType::Minus)
+                        self.token(TokenType::Minus, i, i + 1)
                     };
                 }
                 '*' => {
                     return if self.consume_if(|c| c == '=') {
-                        self.token(TokenType::StarEq)
+                        self.token(TokenType::StarEq, i, i + 2)
                     } else {
-                        self.token(TokenType::Star)
+                        self.token(TokenType::Star, i, i + 1)
                     };
                 }
                 '/' => {
                     return if self.consume_if(|c| c == '=') {
-                        self.token(TokenType::SlashEq)
+                        self.token(TokenType::SlashEq, i, i + 2)
                     } else {
-                        self.token(TokenType::Slash)
+                        self.token(TokenType::Slash, i, i + 1)
                     };
                 }
                 '%' => {
                     return if self.consume_if(|c| c == '=') {
-                        self.token(TokenType::PercentEq)
+                        self.token(TokenType::PercentEq, i, i + 2)
                     } else {
-                        self.token(TokenType::Percent)
+                        self.token(TokenType::Percent, i, i + 1)
                     };
                 }
                 '>' => {
                     return if self.consume_if(|c| c == '=') {
-                        self.token(TokenType::GreaterEq)
+                        self.token(TokenType::GreaterEq, i, i + 2)
                     } else {
-                        self.token(TokenType::Greater)
+                        self.token(TokenType::Greater, i, i + 1)
                     };
                 }
                 '<' => {
                     return if self.consume_if(|c| c == '=') {
-                        self.token(TokenType::LessEq)
+                        self.token(TokenType::LessEq, i, i + 2)
                     } else {
-                        self.token(TokenType::Less)
+                        self.token(TokenType::Less, i, i + 1)
                     };
                 }
                 '!' => {
                     return if let Some((_, '=')) = self.iter.next() {
-                        self.token(TokenType::NotEq)
+                        self.token(TokenType::NotEq, i, i + 2)
                     } else {
                         self.error("unexpected character, expected `!=`")
                     };
@@ -241,6 +188,25 @@ impl Iterator for Lexer<'_> {
 
         // no more characters left
         self.done = true;
-        None
+        self.token(TokenType::Eof, 0, 0)
+    }
+}
+
+impl<'a> IntoIterator for Lexer<'a> {
+    type Item = CompilerResult<Token<'a>>;
+    type IntoIter = TokenStream<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        TokenStream(self)
+    }
+}
+
+pub struct TokenStream<'a>(Lexer<'a>);
+
+impl<'a> Iterator for TokenStream<'a> {
+    type Item = CompilerResult<Token<'a>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(self.0.next_token())
     }
 }
