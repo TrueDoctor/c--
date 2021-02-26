@@ -26,7 +26,7 @@ fn main() -> io::Result<()> {
         "{:#?}",
         Lexer::new(&program)
             .into_iter()
-            .collect::<Result<Vec<_>, _>>()
+            .collect::<Result<Vec<_>, _>>(),
     );
     Ok(())
 }
