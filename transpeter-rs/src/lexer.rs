@@ -92,14 +92,14 @@ impl<'a> Lexer<'a> {
                 match escape {
                     'a' => return Ok(0x07),  // audible bell
                     'b' => return Ok(0x08),  // backspace
-                    'f' => return Ok(0x0c),  // form feed
-                    'n' => return Ok(0x0a),  // line feed
-                    'r' => return Ok(0x0d),  // carriage return
+                    'f' => return Ok(0x0C),  // form feed
+                    'n' => return Ok(0x0A),  // line feed
+                    'r' => return Ok(0x0D),  // carriage return
                     't' => return Ok(0x09),  // horizontal tab
-                    'v' => return Ok(0x0b),  // vertical tab
+                    'v' => return Ok(0x0B),  // vertical tab
                     '\'' => return Ok(0x27), // single quote
                     '"' => return Ok(0x22),  // double quote
-                    '\\' => return Ok(0x5c), // backslash
+                    '\\' => return Ok(0x5C), // backslash
                     'x' => {
                         if let (Some(a), Some(b)) = (
                             self.next().and_then(|x| x.to_digit(16)),
@@ -161,7 +161,7 @@ impl<'a> Lexer<'a> {
                 }
                 // identifier
                 x if x == '_' || x.is_ascii_alphabetic() => {
-                    let j = self.consume_while(|c| c.is_ascii_alphanumeric());
+                    let j = self.consume_while(|c| c == '_' || c.is_ascii_alphanumeric());
                     let ident = &self.program[i..j];
                     let tt = match ident {
                         "if" => TokenType::If,
@@ -190,7 +190,7 @@ impl<'a> Lexer<'a> {
                 // char literal
                 '\'' => {
                     if let Some(c) = self.next() {
-                        if c == '\'' {
+                        if c == '\'' || c == '\n' {
                             return self.error("invalid char literal");
                         }
                         let value = self.consume_char(c)?;

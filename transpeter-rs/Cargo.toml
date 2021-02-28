@@ -1,5 +1,5 @@
 [package]
-name = "transpeter-rs"
+name = "transpeter"
 version = "0.1.0"
 authors = ["konsumlamm <konsumlamm@gmail.com>"]
 edition = "2018"

@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "transpeter-rs"
+name = "transpeter"
 version = "0.1.0"
 dependencies = [
  "clap",

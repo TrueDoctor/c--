@@ -1,10 +1,6 @@
-mod lexer;
-mod token;
-mod util;
-
 use std::{fs, io};
 
-use lexer::Lexer;
+use transpeter::lexer::Lexer;
 
 use clap::{App, Arg};
 

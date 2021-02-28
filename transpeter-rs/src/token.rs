@@ -3,7 +3,7 @@
 use crate::util::Position;
 
 /// An enum representing the token types.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TokenType {
     Identifier(String),
     Type(String),
