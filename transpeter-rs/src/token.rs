@@ -1,10 +1,15 @@
+//! Types for the tokens.
+
 use crate::util::Position;
 
-#[derive(Debug, PartialEq, Eq)]
+/// An enum representing the token types.
+#[derive(Debug)]
 pub enum TokenType {
-    Identifier,
-    Type,
-    IntLiteral,
+    Identifier(String),
+    Type(String),
+    IntLiteral(u8),
+    CharLiteral(u8),
+    StringLiteral(Vec<u8>),
     // keywords
     If,
     Else,
@@ -44,9 +49,11 @@ pub enum TokenType {
     Eof,
 }
 
+/// A token.
 #[derive(Debug)]
-pub struct Token<'a> {
+pub struct Token {
+    /// The type of token.
     pub token_type: TokenType,
-    pub value: &'a str,
+    /// The position of the token.
     pub pos: Position,
 }

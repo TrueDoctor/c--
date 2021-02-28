@@ -8,6 +8,7 @@ use lexer::Lexer;
 
 use clap::{App, Arg};
 
+/// The `main` function. Implements the CLI.
 fn main() -> io::Result<()> {
     // CLI
     let matches = App::new("transpeter")
