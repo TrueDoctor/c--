@@ -117,6 +117,9 @@ impl<'a> Lexer<'a> {
         } else if !c.is_ascii() {
             self.error(format!("expected ASCII character, got '{}'", c))
         } else {
+            if c == '\n' {
+                self.pos.inc_line();
+            }
             Ok(c as u8)
         }
     }
