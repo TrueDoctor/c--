@@ -41,9 +41,9 @@ impl<'a> Lexer<'a> {
 
     /// Creates a [`Token`] from the token type `tt`.
     #[allow(clippy::unnecessary_wraps)]
-    fn token(&mut self, tt: TokenType) -> CompilerResult<Token> {
+    fn token(&mut self, tk: TokenKind) -> CompilerResult<Token> {
         Ok(Token {
-            token_type: tt,
+            kind: tk,
             pos: self.pos,
         })
     }
@@ -128,7 +128,7 @@ impl<'a> Lexer<'a> {
     pub fn next_token(&mut self) -> CompilerResult<Token> {
         // short-circuit if the lexer is already done
         if self.done {
-            return self.token(TokenType::Eof);
+            return self.token(TokenKind::Eof);
         }
 
         // consume characters until a token (or an error) is returned
@@ -167,17 +167,17 @@ impl<'a> Lexer<'a> {
                     let j = self.consume_while(|c| c == '_' || c.is_ascii_alphanumeric());
                     let ident = &self.program[i..j];
                     let tt = match ident {
-                        "if" => TokenType::If,
-                        "else" => TokenType::Else,
-                        "while" => TokenType::While,
-                        "repeat" => TokenType::Repeat,
-                        "return" => TokenType::Return,
-                        "inline" => TokenType::Inline,
-                        "void" | "int" => TokenType::Type(ident.to_string()),
-                        "and" => TokenType::And,
-                        "or" => TokenType::Or,
-                        "not" => TokenType::Not,
-                        _ => TokenType::Identifier(ident.to_string()),
+                        "if" => TokenKind::If,
+                        "else" => TokenKind::Else,
+                        "while" => TokenKind::While,
+                        "repeat" => TokenKind::Repeat,
+                        "return" => TokenKind::Return,
+                        "inline" => TokenKind::Inline,
+                        "void" | "int" => TokenKind::Type(ident.to_string()),
+                        "and" => TokenKind::And,
+                        "or" => TokenKind::Or,
+                        "not" => TokenKind::Not,
+                        _ => TokenKind::Identifier(ident.to_string()),
                     };
                     return self.token(tt);
                 }
@@ -186,7 +186,7 @@ impl<'a> Lexer<'a> {
                     let j = self.consume_while(|c| c.is_ascii_digit());
                     let lexeme = &self.program[i..j];
                     return match lexeme.parse::<u8>() {
-                        Ok(value) => self.token(TokenType::IntLiteral(value)),
+                        Ok(value) => self.token(TokenKind::IntLiteral(value)),
                         Err(_) => self.error(format!("integer literal too big: {}", lexeme)),
                     };
                 }
@@ -198,7 +198,7 @@ impl<'a> Lexer<'a> {
                         }
                         let value = self.consume_char(c)?;
                         if let Some('\'') = self.next() {
-                            return self.token(TokenType::CharLiteral(value));
+                            return self.token(TokenKind::CharLiteral(value));
                         }
                     }
                     return self.error("unterminated char literal");
@@ -208,7 +208,7 @@ impl<'a> Lexer<'a> {
                     let mut buffer = Vec::new();
                     while let Some(c) = self.next() {
                         if c == '"' {
-                            return self.token(TokenType::StringLiteral(buffer));
+                            return self.token(TokenKind::StringLiteral(buffer));
                         }
                         let value = self.consume_char(c)?;
                         buffer.push(value);
@@ -216,72 +216,72 @@ impl<'a> Lexer<'a> {
                     return self.error("unterminated string literal");
                 }
                 // separators
-                '(' => return self.token(TokenType::LeftParen),
-                ')' => return self.token(TokenType::RightParen),
-                '{' => return self.token(TokenType::LeftBrace),
-                '}' => return self.token(TokenType::RightBrace),
-                ',' => return self.token(TokenType::Comma),
-                ';' => return self.token(TokenType::Semicolon),
+                '(' => return self.token(TokenKind::LeftParen),
+                ')' => return self.token(TokenKind::RightParen),
+                '{' => return self.token(TokenKind::LeftBrace),
+                '}' => return self.token(TokenKind::RightBrace),
+                ',' => return self.token(TokenKind::Comma),
+                ';' => return self.token(TokenKind::Semicolon),
                 // operators
                 '=' => {
                     return if self.matches('=') {
-                        self.token(TokenType::EqEq)
+                        self.token(TokenKind::EqEq)
                     } else {
-                        self.token(TokenType::Eq)
+                        self.token(TokenKind::Eq)
                     };
                 }
                 '+' => {
                     return if self.matches('=') {
-                        self.token(TokenType::PlusEq)
+                        self.token(TokenKind::PlusEq)
                     } else {
-                        self.token(TokenType::Plus)
+                        self.token(TokenKind::Plus)
                     };
                 }
                 '-' => {
                     return if self.matches('=') {
-                        self.token(TokenType::MinusEq)
+                        self.token(TokenKind::MinusEq)
                     } else {
-                        self.token(TokenType::Minus)
+                        self.token(TokenKind::Minus)
                     };
                 }
                 '*' => {
                     return if self.matches('=') {
-                        self.token(TokenType::StarEq)
+                        self.token(TokenKind::StarEq)
                     } else {
-                        self.token(TokenType::Star)
+                        self.token(TokenKind::Star)
                     };
                 }
                 '/' => {
                     return if self.matches('=') {
-                        self.token(TokenType::SlashEq)
+                        self.token(TokenKind::SlashEq)
                     } else {
-                        self.token(TokenType::Slash)
+                        self.token(TokenKind::Slash)
                     };
                 }
                 '%' => {
                     return if self.matches('=') {
-                        self.token(TokenType::PercentEq)
+                        self.token(TokenKind::PercentEq)
                     } else {
-                        self.token(TokenType::Percent)
+                        self.token(TokenKind::Percent)
                     };
                 }
                 '>' => {
                     return if self.matches('=') {
-                        self.token(TokenType::GreaterEq)
+                        self.token(TokenKind::GreaterEq)
                     } else {
-                        self.token(TokenType::Greater)
+                        self.token(TokenKind::Greater)
                     };
                 }
                 '<' => {
                     return if self.matches('=') {
-                        self.token(TokenType::LessEq)
+                        self.token(TokenKind::LessEq)
                     } else {
-                        self.token(TokenType::Less)
+                        self.token(TokenKind::Less)
                     };
                 }
                 '!' => {
                     return if let Some('=') = self.next() {
-                        self.token(TokenType::NotEq)
+                        self.token(TokenKind::NotEq)
                     } else {
                         self.error("unexpected character, expected `!=`")
                     };
@@ -293,7 +293,7 @@ impl<'a> Lexer<'a> {
 
         // no more characters left
         self.done = true;
-        self.token(TokenType::Eof)
+        self.token(TokenKind::Eof)
     }
 }
 
