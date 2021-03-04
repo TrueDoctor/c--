@@ -24,7 +24,7 @@ impl<'a> Lexer<'a> {
         Self {
             program,
             iter: program.char_indices().peekable(),
-            pos: Position::new(),
+            pos: Position::default(),
             done: false,
         }
     }
@@ -51,7 +51,7 @@ impl<'a> Lexer<'a> {
     /// Creates a [`CompilerError`] from the message `msg`.
     fn error<T, S: fmt::Display>(&mut self, msg: S) -> CompilerResult<T> {
         self.done = true;
-        Err(CompilerError::with_pos(msg, self.pos))
+        Err(CompilerError::new(msg, self.pos))
     }
 
     /// A combinator that consumes `char`s while they satisfy `pred`.
@@ -319,4 +319,8 @@ impl Iterator for TokenStream<'_> {
             Some(self.0.next_token())
         }
     }
+}
+
+pub fn tokenize(program: &str) -> CompilerResult<Vec<Token>> {
+    Lexer::new(program).into_iter().collect()
 }
