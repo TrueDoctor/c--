@@ -1,18 +1,37 @@
 use std::io::{BufRead, Write};
 use std::{fs, io};
 
+use transpeter::ast::pretty_print::pretty_print_ast;
 use transpeter::lexer::tokenize;
-use transpeter::token::*;
+use transpeter::parser::parse_program;
 
 use clap::{App, Arg};
+
+/// Compiles `input` and prints debug compilation info.
+fn debug_compile(input: &str) {
+    tokenize(input)
+        .and_then(|tokens| {
+            println!("[Tokens]");
+            for token in &tokens[..(tokens.len() - 1)] {
+                println!("{:?}", token.kind);
+            }
+
+            parse_program(tokens, "<repl>")
+        })
+        .map(|ast| {
+            println!("[AST]");
+            pretty_print_ast(ast);
+        })
+        .unwrap_or_else(|err| {
+            eprintln!("[Error]");
+            eprintln!("{}", err);
+        })
+}
 
 /// Compiles the program in `path` and prints the output to stdout.
 fn compile(path: &str) -> io::Result<()> {
     let program = fs::read_to_string(path)?;
-    match tokenize(&program) {
-        Ok(tokens) => println!("{:#?}", tokens),
-        Err(err) => eprintln!("{:?}", err),
-    }
+    debug_compile(&program);
     Ok(())
 }
 
@@ -26,15 +45,7 @@ fn repl() -> io::Result<()> {
         print!("> ");
         stdout.flush()?;
         match input.next() {
-            Some(line) => match tokenize(&line?) {
-                Ok(mut tokens) => {
-                    assert_eq!(tokens.pop().map(|token| token.kind), Some(TokenKind::Eof));
-                    for token in tokens {
-                        println!("{}", token.kind);
-                    }
-                }
-                Err(err) => eprintln!("{:?}", err),
-            },
+            Some(line) => debug_compile(&line?),
             None => {
                 println!();
                 break;

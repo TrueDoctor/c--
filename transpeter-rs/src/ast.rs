@@ -79,10 +79,10 @@ pub enum StatementKind {
         expr: Expr,
     },
     Inline {
-        code: String,
+        code: Vec<u8>,
     },
     Assign {
-        var: Ident,
+        name: Ident,
         op: AssignOp,
         expr: Expr,
     },

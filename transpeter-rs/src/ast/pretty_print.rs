@@ -2,6 +2,7 @@
 
 use crate::ast::*;
 
+/// Pretty prints the given AST.
 pub fn pretty_print_ast(program: Program) {
     fn pretty_print_item(item: Item, prefix: &str) {
         use ItemKind::*;
@@ -91,11 +92,11 @@ pub fn pretty_print_ast(program: Program) {
             }
             Inline { code } => {
                 println!("{}Inline", prefix);
-                println!("{}  {}", prefix, code);
+                println!("{}  {}", prefix, String::from_utf8(code).unwrap());
             }
-            Assign { var, op, expr } => {
+            Assign { name, op, expr } => {
                 println!("{}Assign", prefix);
-                println!("{}  name: {}", prefix, var.name);
+                println!("{}  name: {}", prefix, name.name);
                 println!("{}  operator: {:?}", prefix, op);
                 println!("{}  expression:", prefix);
                 pretty_print_expr(expr, &format!("{}  ", prefix));
