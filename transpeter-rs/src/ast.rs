@@ -1,5 +1,7 @@
 //! The abstract syntax tree.
 
+pub mod pretty_print;
+
 use crate::util::Position;
 
 #[derive(Debug)]
@@ -20,10 +22,11 @@ pub enum ItemKind {
         name: Ident,
         return_type: Type,
         parameters: Vec<Declaration>,
-        statements: Vec<Stmt>,
+        statements: Vec<Statement>,
     },
     // Const {},
     // Struct {},
+    Statement(Statement),
 }
 
 #[derive(Debug)]
@@ -48,28 +51,29 @@ pub struct Ident {
 // statements
 
 #[derive(Debug)]
-pub struct Stmt {
-    pos: Position,
-    kind: StmtKind,
+pub struct Statement {
+    pub pos: Position,
+    pub kind: StatementKind,
 }
 
 #[derive(Debug)]
-pub enum StmtKind {
+pub enum StatementKind {
+    Declaration(Declaration),
     Block {
-        statements: Vec<Stmt>,
+        statements: Vec<Statement>,
     },
     If {
         condition: Expr,
-        if_statement: Box<Stmt>,
-        else_statement: Option<Box<Stmt>>,
+        if_statement: Box<Statement>,
+        else_statement: Option<Box<Statement>>,
     },
     While {
         condition: Expr,
-        statement: Box<Stmt>,
+        statement: Box<Statement>,
     },
     Repeat {
         expr: Expr,
-        statement: Box<Stmt>,
+        statement: Box<Statement>,
     },
     Return {
         expr: Expr,
@@ -108,8 +112,8 @@ pub enum AssignOpKind {
 
 #[derive(Debug)]
 pub struct Expr {
-    pos: Position,
-    kind: ExprKind,
+    pub pos: Position,
+    pub kind: ExprKind,
 }
 
 #[derive(Debug)]
@@ -170,4 +174,30 @@ pub enum UnaryOpKind {
     Plus,
     Minus,
     Not,
+}
+
+// `From` implementations
+
+impl From<Declaration> for Statement {
+    fn from(decl: Declaration) -> Self {
+        Self {
+            pos: decl.type_.pos,
+            kind: StatementKind::Declaration(decl),
+        }
+    }
+}
+
+impl From<Statement> for Item {
+    fn from(stmt: Statement) -> Self {
+        Self {
+            pos: stmt.pos,
+            kind: ItemKind::Statement(stmt),
+        }
+    }
+}
+
+impl From<Declaration> for Item {
+    fn from(decl: Declaration) -> Self {
+        Into::<Statement>::into(decl).into()
+    }
 }

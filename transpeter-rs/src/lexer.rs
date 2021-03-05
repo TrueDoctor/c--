@@ -3,10 +3,10 @@
 use std::fmt;
 use std::{iter::Peekable, str::CharIndices};
 
-use crate::token::*;
-use crate::util::*;
+use crate::token::{Token, TokenKind};
+use crate::util::{CompilerError, CompilerResult, Position};
 
-/// A type containing the lexer state.
+/// The lexer state.
 pub struct Lexer<'a> {
     /// The input program.
     program: &'a str,

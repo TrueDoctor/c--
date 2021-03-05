@@ -24,7 +24,7 @@ impl CompilerError {
 
 impl fmt::Display for CompilerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "[{}] {}", self.pos, self.message)
+        write!(f, "{}: {}", self.pos, self.message)
     }
 }
 

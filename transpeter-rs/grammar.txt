@@ -1,0 +1,29 @@
+program = (function | statement)*
+
+function = (type | "void") IDENTIFIER "(" (type IDENTIFIER ",")* (type IDENTIFIER)? ")" block
+block = "{" statement* "}"
+statement = type IDENTIFIER ("=" expr)? ";"
+          | "return" expr ";"
+          | "inline" STRING-LITERAL ";"
+          | function-call ";"
+          | IDENTIFIER assign-op expr ";"
+          | block
+          | "if" "(" expr ")" statement ("else" statement)?
+          | ("while" | "repeat") "(" expr ")" statement
+assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "%="
+
+expr = logical-and-expr ("or" logical-and-expr)*
+logical-and-expr = equality-expr ("and" equality-expr)*
+equality-expr = relational-expr (("!=" | "==") relational-expr)*
+relational-expr = additive-expr ((">" | ">=" | "<" | "<=") additive-expr)*
+additive-expr = term (("+" | "-") term)*
+term = factor (("*" | "/" | "%") factor)*
+factor = function-call
+       | "(" expr ")"
+       | ("not" | "~" | "-" | "+") factor
+       | INT-LITERAL
+       | CHAR-LITERAL
+       | IDENTIFIER
+function-call = IDENTIFIER "(" (expr ",")* expr? ")"
+
+type = "int"
