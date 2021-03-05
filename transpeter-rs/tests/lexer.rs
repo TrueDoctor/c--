@@ -1,5 +1,18 @@
-use transpeter::lexer::tokenize;
+use transpeter::lexer::Lexer;
+use transpeter::token::TokenKind;
 use transpeter::token::TokenKind::*;
+use transpeter::util::CompilerResult;
+
+fn tokenize(program: &str) -> CompilerResult<Vec<TokenKind>> {
+    let mut res = Lexer::new(program)
+        .into_iter()
+        .map(|res| res.map(|t| t.kind))
+        .collect::<CompilerResult<Vec<_>>>();
+    if let Ok(v) = res.as_mut() {
+        v.pop();
+    };
+    res
+}
 
 #[test]
 fn whitespace() {
