@@ -97,7 +97,7 @@ pub fn pretty_print_ast(program: Program) {
             Assign { name, op, expr } => {
                 println!("{}Assign", prefix);
                 println!("{}  name: {}", prefix, name.name);
-                println!("{}  operator: {:?}", prefix, op);
+                println!("{}  operator: {}", prefix, op.kind);
                 println!("{}  expression:", prefix);
                 pretty_print_expr(expr, &format!("{}  ", prefix));
             }
@@ -114,20 +114,20 @@ pub fn pretty_print_ast(program: Program) {
     }
 
     fn pretty_print_expr(expr: Expr, prefix: &str) {
-        use ExprKind::*;
-        match expr.kind {
+        use Expr::*;
+        match expr {
             Binary { left, op, right } => {
                 println!("{}Binary", prefix);
                 println!("{}  left:", prefix);
                 let new_prefix = format!("{}    ", prefix);
                 pretty_print_expr(*left, &new_prefix);
-                println!("{}  operator: {:?}", prefix, op);
+                println!("{}  operator: {}", prefix, op.kind);
                 println!("{}  right:", prefix);
                 pretty_print_expr(*right, &new_prefix);
             }
             Unary { op, right } => {
                 println!("{}Binary", prefix);
-                println!("{}  operator: {:?}", prefix, op);
+                println!("{}  operator: {}", prefix, op.kind);
                 println!("{}  right:", prefix);
                 pretty_print_expr(*right, &format!("{}    ", prefix));
             }

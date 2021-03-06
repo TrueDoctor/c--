@@ -4,7 +4,38 @@ use std::iter::Peekable;
 
 use crate::ast::*;
 use crate::token::{Token, TokenKind};
-use crate::util::{CompilerError, CompilerResult, Position};
+use crate::util::{CompilerError, CompilerResult};
+
+fn binary_bp(op: &TokenKind) -> Option<(BinaryOpKind, (u8, u8))> {
+    use BinaryOpKind::*;
+    // FIXME: binding powers
+    Some(match op {
+        TokenKind::Plus => (Plus, (11, 12)),
+        TokenKind::Minus => (Minus, (11, 12)),
+        TokenKind::Star => (Star, (13, 14)),
+        TokenKind::Slash => (Slash, (13, 14)),
+        TokenKind::Percent => (Percent, (13, 14)),
+        TokenKind::EqEq => (EqEq, (7, 8)),
+        TokenKind::NotEq => (NotEq, (7, 8)),
+        TokenKind::Greater => (Greater, (9, 10)),
+        TokenKind::GreaterEq => (GreaterEq, (9, 10)),
+        TokenKind::Less => (Less, (9, 10)),
+        TokenKind::LessEq => (LessEq, (9, 10)),
+        TokenKind::And => (And, (3, 4)),
+        TokenKind::Or => (Or, (1, 2)),
+        _ => return None,
+    })
+}
+
+fn unary_bp(op: &TokenKind) -> Option<(UnaryOpKind, u8)> {
+    use UnaryOpKind::*;
+    Some(match op {
+        TokenKind::Plus => (Plus, 15),
+        TokenKind::Minus => (Minus, 15),
+        TokenKind::Not => (Not, 5),
+        _ => return None,
+    })
+}
 
 /// The parser state.
 pub struct Parser<I: Iterator<Item = Token>> {
@@ -44,8 +75,8 @@ impl<I: Iterator<Item = Token>> Parser<I> {
     fn expect_identifier(&mut self) -> CompilerResult<Ident> {
         let token = self.next();
         let pos = token.pos;
-        let name = match &token.kind {
-            TokenKind::Identifier(name) => name.clone(),
+        let name = match token.kind {
+            TokenKind::Identifier(name) => name,
             _ => {
                 return Err(CompilerError::new(
                     format!("expected identifier, got {}", token.kind),
@@ -59,8 +90,8 @@ impl<I: Iterator<Item = Token>> Parser<I> {
     fn expect_type(&mut self) -> CompilerResult<Type> {
         let token = self.next();
         let pos = token.pos;
-        let name = match &token.kind {
-            TokenKind::Type(name) => name.clone(),
+        let name = match token.kind {
+            TokenKind::Type(name) => name,
             _ => {
                 return Err(CompilerError::new(
                     format!("expected type, got {}", token.kind),
@@ -227,7 +258,10 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 StatementKind::Inline { code }
             }
             TokenKind::Type(_) => {
-                let decl = self.parse_declaration()?;
+                let mut decl = self.parse_declaration()?;
+                if self.optional(&TokenKind::Eq) {
+                    decl.init = Some(self.parse_expr()?);
+                }
                 self.expect(&TokenKind::Semicolon)?;
                 StatementKind::Declaration(decl)
             }
@@ -239,6 +273,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                     self.expect(&TokenKind::Semicolon)?;
                     StatementKind::Call { name, args }
                 } else {
+                    // assignment
                     let token = self.next();
                     let pos = token.pos;
                     let kind = match token.kind {
@@ -267,11 +302,73 @@ impl<I: Iterator<Item = Token>> Parser<I> {
     }
 
     fn parse_expr(&mut self) -> CompilerResult<Expr> {
-        // TODO: use precedence climbing / pratt parsing
-        Err(CompilerError::new(
-            "expressions are not yet supported",
-            Position::default(),
-        ))
+        self.parse_expr_bp(0)
+    }
+
+    fn parse_expr_bp(&mut self, min_bp: u8) -> CompilerResult<Expr> {
+        // pratt parsing
+        // see https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
+
+        // prefix operators
+        let mut lhs = if let Some((op, r_bp)) = unary_bp(&self.peek().kind) {
+            let token = self.next();
+            let expr = self.parse_expr_bp(r_bp)?;
+            Expr::Unary {
+                op: UnaryOp {
+                    pos: token.pos,
+                    kind: op,
+                },
+                right: Box::new(expr),
+            }
+        } else {
+            self.parse_primary()?
+        };
+
+        // infix operators
+        while let Some((op, (l_bp, r_bp))) = binary_bp(&self.peek().kind) {
+            if l_bp < min_bp {
+                break;
+            }
+            let op_token = self.next();
+            let rhs = self.parse_expr_bp(r_bp)?;
+            lhs = Expr::Binary {
+                left: Box::new(lhs),
+                op: BinaryOp {
+                    pos: op_token.pos,
+                    kind: op,
+                },
+                right: Box::new(rhs),
+            };
+        }
+
+        Ok(lhs)
+    }
+
+    fn parse_primary(&mut self) -> CompilerResult<Expr> {
+        let token = self.next();
+        let pos = token.pos;
+        Ok(match token.kind {
+            TokenKind::Identifier(name) => {
+                let name = Ident { pos, name };
+                if self.optional(&TokenKind::LeftParen) {
+                    // function call
+                    let args = self.parse_list(Self::parse_expr, &TokenKind::RightParen)?;
+                    Expr::Call { name, args }
+                } else {
+                    // variable
+                    Expr::Var { name }
+                }
+            }
+            TokenKind::LeftParen => {
+                let expr = self.parse_expr()?;
+                self.expect(&TokenKind::RightParen)?;
+                expr
+            }
+            TokenKind::IntLiteral(value) | TokenKind::CharLiteral(value) => {
+                Expr::Int { pos, value }
+            }
+            _ => return Err(CompilerError::new("expected primary expression", pos)),
+        })
     }
 }
 

@@ -2,6 +2,8 @@
 
 pub mod pretty_print;
 
+use std::fmt;
+
 use crate::util::Position;
 
 #[derive(Debug)]
@@ -98,7 +100,7 @@ pub struct AssignOp {
     pub kind: AssignOpKind,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum AssignOpKind {
     Eq,
     PlusEq,
@@ -111,13 +113,7 @@ pub enum AssignOpKind {
 // expressions
 
 #[derive(Debug)]
-pub struct Expr {
-    pub pos: Position,
-    pub kind: ExprKind,
-}
-
-#[derive(Debug)]
-pub enum ExprKind {
+pub enum Expr {
     Binary {
         left: Box<Expr>,
         op: BinaryOp,
@@ -146,7 +142,7 @@ pub struct BinaryOp {
     pub kind: BinaryOpKind,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum BinaryOpKind {
     Plus,
     Minus,
@@ -169,14 +165,14 @@ pub struct UnaryOp {
     pub kind: UnaryOpKind,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum UnaryOpKind {
     Plus,
     Minus,
     Not,
 }
 
-// `From` implementations
+// trait implementations
 
 impl From<Declaration> for Statement {
     fn from(decl: Declaration) -> Self {
@@ -199,5 +195,54 @@ impl From<Statement> for Item {
 impl From<Declaration> for Item {
     fn from(decl: Declaration) -> Self {
         Into::<Statement>::into(decl).into()
+    }
+}
+
+impl fmt::Display for AssignOpKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use AssignOpKind::*;
+
+        f.write_str(match self {
+            Eq => "=",
+            PlusEq => "+=",
+            MinusEq => "-=",
+            StarEq => "*=",
+            SlashEq => "/=",
+            PercentEq => "%=",
+        })
+    }
+}
+
+impl fmt::Display for BinaryOpKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use BinaryOpKind::*;
+
+        f.write_str(match self {
+            Plus => "+",
+            Minus => "-",
+            Star => "*",
+            Slash => "/",
+            Percent => "%",
+            EqEq => "==",
+            NotEq => "!=",
+            Greater => ">",
+            GreaterEq => ">=",
+            Less => "<",
+            LessEq => "<=",
+            And => "and",
+            Or => "or",
+        })
+    }
+}
+
+impl fmt::Display for UnaryOpKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use UnaryOpKind::*;
+
+        f.write_str(match self {
+            Plus => "+",
+            Minus => "-",
+            Not => "not",
+        })
     }
 }
