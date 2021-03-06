@@ -14,8 +14,7 @@ assign-op = "=" | "+=" | "-=" | "*=" | "/=" | "%="
 
 expr = logical-and-expr ("or" logical-and-expr)*
 logical-and-expr = equality-expr ("and" equality-expr)*
-equality-expr = relational-expr (("!=" | "==") relational-expr)*
-relational-expr = additive-expr ((">" | ">=" | "<" | "<=") additive-expr)*
+relational-expr = additive-expr (("!=" | "==" | ">" | ">=" | "<" | "<=") additive-expr)*
 additive-expr = term (("+" | "-") term)*
 term = factor (("*" | "/" | "%") factor)*
 factor = function-call

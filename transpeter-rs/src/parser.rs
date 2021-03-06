@@ -1,5 +1,6 @@
 //! The parser.
 
+use std::fmt;
 use std::iter::Peekable;
 
 use crate::ast::*;
@@ -8,19 +9,19 @@ use crate::util::{CompilerError, CompilerResult};
 
 fn binary_bp(op: &TokenKind) -> Option<(BinaryOpKind, (u8, u8))> {
     use BinaryOpKind::*;
-    // FIXME: binding powers
+
     Some(match op {
-        TokenKind::Plus => (Plus, (11, 12)),
-        TokenKind::Minus => (Minus, (11, 12)),
-        TokenKind::Star => (Star, (13, 14)),
-        TokenKind::Slash => (Slash, (13, 14)),
-        TokenKind::Percent => (Percent, (13, 14)),
+        TokenKind::Plus => (Plus, (9, 10)),
+        TokenKind::Minus => (Minus, (9, 10)),
+        TokenKind::Star => (Star, (11, 12)),
+        TokenKind::Slash => (Slash, (11, 12)),
+        TokenKind::Percent => (Percent, (11, 12)),
         TokenKind::EqEq => (EqEq, (7, 8)),
         TokenKind::NotEq => (NotEq, (7, 8)),
-        TokenKind::Greater => (Greater, (9, 10)),
-        TokenKind::GreaterEq => (GreaterEq, (9, 10)),
-        TokenKind::Less => (Less, (9, 10)),
-        TokenKind::LessEq => (LessEq, (9, 10)),
+        TokenKind::Greater => (Greater, (7, 8)),
+        TokenKind::GreaterEq => (GreaterEq, (7, 8)),
+        TokenKind::Less => (Less, (7, 8)),
+        TokenKind::LessEq => (LessEq, (7, 8)),
         TokenKind::And => (And, (3, 4)),
         TokenKind::Or => (Or, (1, 2)),
         _ => return None,
@@ -29,12 +30,17 @@ fn binary_bp(op: &TokenKind) -> Option<(BinaryOpKind, (u8, u8))> {
 
 fn unary_bp(op: &TokenKind) -> Option<(UnaryOpKind, u8)> {
     use UnaryOpKind::*;
+
     Some(match op {
-        TokenKind::Plus => (Plus, 15),
-        TokenKind::Minus => (Minus, 15),
+        TokenKind::Plus => (Plus, 13),
+        TokenKind::Minus => (Minus, 13),
         TokenKind::Not => (Not, 5),
         _ => return None,
     })
+}
+
+fn expected(msg: impl fmt::Display, token: Token) -> CompilerError {
+    CompilerError::new(format!("expected {}, got {}", msg, token.kind), token.pos)
 }
 
 /// The parser state.
@@ -65,41 +71,26 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         if &token.kind == tk {
             Ok(token)
         } else {
-            Err(CompilerError::new(
-                format!("expected {}, got {}", tk, token.kind),
-                token.pos,
-            ))
+            Err(expected(tk, token))
         }
     }
 
     fn expect_identifier(&mut self) -> CompilerResult<Ident> {
         let token = self.next();
         let pos = token.pos;
-        let name = match token.kind {
-            TokenKind::Identifier(name) => name,
-            _ => {
-                return Err(CompilerError::new(
-                    format!("expected identifier, got {}", token.kind),
-                    token.pos,
-                ))
-            }
-        };
-        Ok(Ident { pos, name })
+        match token.kind {
+            TokenKind::Identifier(name) => Ok(Ident { pos, name }),
+            _ => Err(expected("identifier", token)),
+        }
     }
 
     fn expect_type(&mut self) -> CompilerResult<Type> {
         let token = self.next();
         let pos = token.pos;
-        let name = match token.kind {
-            TokenKind::Type(name) => name,
-            _ => {
-                return Err(CompilerError::new(
-                    format!("expected type, got {}", token.kind),
-                    token.pos,
-                ))
-            }
-        };
-        Ok(Type { pos, name })
+        match token.kind {
+            TokenKind::Type(name) => Ok(Type { pos, name }),
+            _ => Err(expected("type", token)),
+        }
     }
 
     fn optional(&mut self, tk: &TokenKind) -> bool {
@@ -142,22 +133,15 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                             decl.into()
                         }
                         TokenKind::Semicolon => decl.into(),
-                        _ => {
-                            return Err(CompilerError::new(
-                                "expected function definition or declaration",
-                                token.pos,
-                            ))
-                        }
+                        _ => return Err(expected("function definition or declaration", token)),
                     }
                 }
                 _ => self.parse_statement()?.into(),
             };
             items.push(item);
         }
-        Ok(Program {
-            items,
-            name: name.to_string(),
-        })
+        let name = name.to_string();
+        Ok(Program { items, name })
     }
 
     fn parse_list<T>(
@@ -189,7 +173,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         while self.peek().kind != TokenKind::RightBrace {
             statements.push(self.parse_statement()?);
         }
-        self.next();
+        self.next(); // has kind TokenKind::RightBrace
         Ok(statements)
     }
 
@@ -245,17 +229,13 @@ impl<I: Iterator<Item = Token>> Parser<I> {
             TokenKind::Inline => {
                 self.next();
                 let token = self.next();
-                let code = match token.kind {
-                    TokenKind::StringLiteral(value) => value,
-                    _ => {
-                        return Err(CompilerError::new(
-                            format!("expected string literal, got {}", token.kind),
-                            token.pos,
-                        ));
+                match token.kind {
+                    TokenKind::StringLiteral(code) => {
+                        self.expect(&TokenKind::Semicolon)?;
+                        StatementKind::Inline { code }
                     }
-                };
-                self.expect(&TokenKind::Semicolon)?;
-                StatementKind::Inline { code }
+                    _ => return Err(expected("string literal", token)),
+                }
             }
             TokenKind::Type(_) => {
                 let mut decl = self.parse_declaration()?;
@@ -283,12 +263,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                         TokenKind::StarEq => AssignOpKind::StarEq,
                         TokenKind::SlashEq => AssignOpKind::SlashEq,
                         TokenKind::PercentEq => AssignOpKind::PercentEq,
-                        _ => {
-                            return Err(CompilerError::new(
-                                "expected function call or assignment",
-                                pos,
-                            ));
-                        }
+                        _ => return Err(expected("function call or assignment", token)),
                     };
                     let op = AssignOp { pos, kind };
                     let expr = self.parse_expr()?;
@@ -296,7 +271,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                     StatementKind::Assign { name, op, expr }
                 }
             }
-            _ => return Err(CompilerError::new("expected statement", pos)),
+            _ => return Err(expected("statement", self.next())),
         };
         Ok(Statement { pos, kind })
     }
@@ -367,7 +342,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
             TokenKind::IntLiteral(value) | TokenKind::CharLiteral(value) => {
                 Expr::Int { pos, value }
             }
-            _ => return Err(CompilerError::new("expected primary expression", pos)),
+            _ => return Err(expected("expression", token)),
         })
     }
 }
