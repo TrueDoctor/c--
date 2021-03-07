@@ -5,8 +5,9 @@ use crate::ast::*;
 /// Pretty prints the given AST.
 pub fn pretty_print_ast(program: Program) {
     fn pretty_print_item(item: Item, prefix: &str) {
-        use ItemKind::*;
-        match item.kind {
+        use Item::*;
+
+        match item {
             Function {
                 name,
                 return_type,
@@ -41,8 +42,9 @@ pub fn pretty_print_ast(program: Program) {
     }
 
     fn pretty_print_statement(stmt: Statement, prefix: &str) {
-        use StatementKind::*;
-        match stmt.kind {
+        use Statement::*;
+
+        match stmt {
             Declaration(decl) => pretty_print_declaration(decl, prefix),
             Block { statements } => {
                 println!("{}Block", prefix);
@@ -55,6 +57,7 @@ pub fn pretty_print_ast(program: Program) {
                 condition,
                 if_statement,
                 else_statement,
+                ..
             } => {
                 println!("{}If", prefix);
                 println!("{}  condition:", prefix);
@@ -70,6 +73,7 @@ pub fn pretty_print_ast(program: Program) {
             While {
                 condition,
                 statement,
+                ..
             } => {
                 println!("{}While", prefix);
                 println!("{}  condition:", prefix);
@@ -78,7 +82,9 @@ pub fn pretty_print_ast(program: Program) {
                 println!("{}  statement:", prefix);
                 pretty_print_statement(*statement, &new_prefix);
             }
-            Repeat { expr, statement } => {
+            Repeat {
+                expr, statement, ..
+            } => {
                 println!("{}Repeat", prefix);
                 println!("{}  expression:", prefix);
                 let new_prefix = format!("{}    ", prefix);
@@ -86,11 +92,11 @@ pub fn pretty_print_ast(program: Program) {
                 println!("{}  statement:", prefix);
                 pretty_print_statement(*statement, &new_prefix);
             }
-            Return { expr } => {
+            Return { expr, .. } => {
                 println!("{}Return", prefix);
                 pretty_print_expr(expr, &format!("{}  ", prefix));
             }
-            Inline { code } => {
+            Inline { code, .. } => {
                 println!("{}Inline", prefix);
                 println!("{}  {}", prefix, String::from_utf8(code).unwrap());
             }
@@ -115,6 +121,7 @@ pub fn pretty_print_ast(program: Program) {
 
     fn pretty_print_expr(expr: Expr, prefix: &str) {
         use Expr::*;
+
         match expr {
             Binary { left, op, right } => {
                 println!("{}Binary", prefix);

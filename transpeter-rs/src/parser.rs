@@ -116,27 +116,24 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                             let parameters =
                                 self.parse_list(Self::parse_declaration, &TokenKind::RightParen)?;
                             let statements = self.parse_block()?;
-                            Item {
-                                pos: token.pos,
-                                kind: ItemKind::Function {
-                                    name: decl.name,
-                                    return_type: decl.type_,
-                                    parameters,
-                                    statements,
-                                },
+                            Item::Function {
+                                name: decl.name,
+                                return_type: decl.type_,
+                                parameters,
+                                statements,
                             }
                         }
                         TokenKind::Eq => {
                             // declaration with initialization
                             decl.init = Some(self.parse_expr()?);
                             self.expect(&TokenKind::Semicolon)?;
-                            decl.into()
+                            Item::Statement(Statement::Declaration(decl))
                         }
-                        TokenKind::Semicolon => decl.into(),
+                        TokenKind::Semicolon => Item::Statement(Statement::Declaration(decl)),
                         _ => return Err(expected("function definition or declaration", token)),
                     }
                 }
-                _ => self.parse_statement()?.into(),
+                _ => Item::Statement(self.parse_statement()?),
             };
             items.push(item);
         }
@@ -180,8 +177,8 @@ impl<I: Iterator<Item = Token>> Parser<I> {
     fn parse_statement(&mut self) -> CompilerResult<Statement> {
         let token = self.peek();
         let pos = token.pos;
-        let kind = match token.kind {
-            TokenKind::LeftBrace => StatementKind::Block {
+        Ok(match token.kind {
+            TokenKind::LeftBrace => Statement::Block {
                 statements: self.parse_block()?,
             },
             TokenKind::If => {
@@ -195,7 +192,8 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 } else {
                     None
                 };
-                StatementKind::If {
+                Statement::If {
+                    pos,
                     condition,
                     if_statement,
                     else_statement,
@@ -207,7 +205,8 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 let condition = self.parse_expr()?;
                 self.expect(&TokenKind::RightParen)?;
                 let statement = Box::new(self.parse_statement()?);
-                StatementKind::While {
+                Statement::While {
+                    pos,
                     condition,
                     statement,
                 }
@@ -218,13 +217,17 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 let expr = self.parse_expr()?;
                 self.expect(&TokenKind::RightParen)?;
                 let statement = Box::new(self.parse_statement()?);
-                StatementKind::Repeat { expr, statement }
+                Statement::Repeat {
+                    pos,
+                    expr,
+                    statement,
+                }
             }
             TokenKind::Return => {
                 self.next();
                 let expr = self.parse_expr()?;
                 self.expect(&TokenKind::Semicolon)?;
-                StatementKind::Return { expr }
+                Statement::Return { pos, expr }
             }
             TokenKind::Inline => {
                 self.next();
@@ -232,7 +235,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 match token.kind {
                     TokenKind::StringLiteral(code) => {
                         self.expect(&TokenKind::Semicolon)?;
-                        StatementKind::Inline { code }
+                        Statement::Inline { pos, code }
                     }
                     _ => return Err(expected("string literal", token)),
                 }
@@ -243,7 +246,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                     decl.init = Some(self.parse_expr()?);
                 }
                 self.expect(&TokenKind::Semicolon)?;
-                StatementKind::Declaration(decl)
+                Statement::Declaration(decl)
             }
             TokenKind::Identifier(_) => {
                 let name = self.expect_identifier()?;
@@ -251,7 +254,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                     // function call
                     let args = self.parse_list(Self::parse_expr, &TokenKind::RightParen)?;
                     self.expect(&TokenKind::Semicolon)?;
-                    StatementKind::Call { name, args }
+                    Statement::Call { name, args }
                 } else {
                     // assignment
                     let token = self.next();
@@ -268,12 +271,11 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                     let op = AssignOp { pos, kind };
                     let expr = self.parse_expr()?;
                     self.expect(&TokenKind::Semicolon)?;
-                    StatementKind::Assign { name, op, expr }
+                    Statement::Assign { name, op, expr }
                 }
             }
             _ => return Err(expected("statement", self.next())),
-        };
-        Ok(Statement { pos, kind })
+        })
     }
 
     fn parse_expr(&mut self) -> CompilerResult<Expr> {

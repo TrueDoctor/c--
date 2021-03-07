@@ -13,13 +13,7 @@ pub struct Program {
 }
 
 #[derive(Debug)]
-pub struct Item {
-    pub pos: Position,
-    pub kind: ItemKind,
-}
-
-#[derive(Debug)]
-pub enum ItemKind {
+pub enum Item {
     Function {
         name: Ident,
         return_type: Type,
@@ -53,34 +47,33 @@ pub struct Ident {
 // statements
 
 #[derive(Debug)]
-pub struct Statement {
-    pub pos: Position,
-    pub kind: StatementKind,
-}
-
-#[derive(Debug)]
-pub enum StatementKind {
+pub enum Statement {
     Declaration(Declaration),
     Block {
         statements: Vec<Statement>,
     },
     If {
+        pos: Position,
         condition: Expr,
         if_statement: Box<Statement>,
         else_statement: Option<Box<Statement>>,
     },
     While {
+        pos: Position,
         condition: Expr,
         statement: Box<Statement>,
     },
     Repeat {
+        pos: Position,
         expr: Expr,
         statement: Box<Statement>,
     },
     Return {
+        pos: Position,
         expr: Expr,
     },
     Inline {
+        pos: Position,
         code: Vec<u8>,
     },
     Assign {
@@ -173,30 +166,6 @@ pub enum UnaryOpKind {
 }
 
 // trait implementations
-
-impl From<Declaration> for Statement {
-    fn from(decl: Declaration) -> Self {
-        Self {
-            pos: decl.type_.pos,
-            kind: StatementKind::Declaration(decl),
-        }
-    }
-}
-
-impl From<Statement> for Item {
-    fn from(stmt: Statement) -> Self {
-        Self {
-            pos: stmt.pos,
-            kind: ItemKind::Statement(stmt),
-        }
-    }
-}
-
-impl From<Declaration> for Item {
-    fn from(decl: Declaration) -> Self {
-        Into::<Statement>::into(decl).into()
-    }
-}
 
 impl fmt::Display for AssignOpKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
