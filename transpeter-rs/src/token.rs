@@ -37,6 +37,10 @@ pub enum TokenKind {
     Or,
     /// `not`
     Not,
+    /// `true`
+    True,
+    /// `false`
+    False,
 
     // separators
     /// `(`
@@ -124,6 +128,8 @@ impl fmt::Display for TokenKind {
             TokenKind::And => write!(f, "keyword `and`"),
             TokenKind::Or => write!(f, "keyword `or`"),
             TokenKind::Not => write!(f, "keyword `not`"),
+            TokenKind::True => write!(f, "keyword `true`"),
+            TokenKind::False => write!(f, "keyword `false`"),
             TokenKind::LeftParen => write!(f, "`(`"),
             TokenKind::RightParen => write!(f, "`)`"),
             TokenKind::LeftBrace => write!(f, "`{{`"),

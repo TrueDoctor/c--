@@ -167,10 +167,13 @@ impl<I: Iterator<Item = Token>> Parser<I> {
     fn parse_block(&mut self) -> CompilerResult<Vec<Statement>> {
         self.expect(&TokenKind::LeftBrace)?;
         let mut statements = Vec::new();
-        while self.peek().kind != TokenKind::RightBrace {
-            statements.push(self.parse_statement()?);
+        loop {
+            match self.peek().kind {
+                TokenKind::RightBrace | TokenKind::Eof => break,
+                _ => statements.push(self.parse_statement()?),
+            }
         }
-        self.next(); // has kind TokenKind::RightBrace
+        self.expect(&TokenKind::RightBrace)?;
         Ok(statements)
     }
 
@@ -178,9 +181,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         let token = self.peek();
         let pos = token.pos;
         Ok(match token.kind {
-            TokenKind::LeftBrace => Statement::Block {
-                statements: self.parse_block()?,
-            },
+            TokenKind::LeftBrace => Statement::Block(self.parse_block()?),
             TokenKind::If => {
                 self.next();
                 self.expect(&TokenKind::LeftParen)?;
@@ -235,6 +236,24 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 match token.kind {
                     TokenKind::StringLiteral(code) => {
                         self.expect(&TokenKind::Semicolon)?;
+
+                        // check if `code` is valid brainfuck
+                        let mut count = 0usize;
+                        for &c in &code {
+                            if c == b'[' {
+                                count += 1;
+                            } else if c == b']' {
+                                if count == 0 {
+                                    return Err(CompilerError::new("unexpected ']' in inline code", pos));
+                                } else {
+                                    count -= 1;
+                                }
+                            }
+                        }
+                        if count > 0 {
+                            return Err(CompilerError::new("missing ']' in inline code", pos));
+                        }
+
                         Statement::Inline { pos, code }
                     }
                     _ => return Err(expected("string literal", token)),
@@ -344,6 +363,8 @@ impl<I: Iterator<Item = Token>> Parser<I> {
             TokenKind::IntLiteral(value) | TokenKind::CharLiteral(value) => {
                 Expr::Int { pos, value }
             }
+            TokenKind::True => Expr::Int { pos, value: 1 },
+            TokenKind::False => Expr::Int { pos, value: 0 },
             _ => return Err(expected("expression", token)),
         })
     }

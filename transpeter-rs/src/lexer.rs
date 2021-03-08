@@ -177,6 +177,8 @@ impl<'a> Lexer<'a> {
                         "and" => TokenKind::And,
                         "or" => TokenKind::Or,
                         "not" => TokenKind::Not,
+                        "true" => TokenKind::True,
+                        "false" => TokenKind::False,
                         _ => TokenKind::Identifier(ident.to_string()),
                     };
                     return self.token(tt);

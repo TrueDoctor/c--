@@ -1,6 +1,6 @@
 //! Pretty printing for the AST.
 
-use crate::ast::*;
+use super::*;
 
 /// Pretty prints the given AST.
 pub fn pretty_print_ast(program: Program) {
@@ -46,7 +46,7 @@ pub fn pretty_print_ast(program: Program) {
 
         match stmt {
             Declaration(decl) => pretty_print_declaration(decl, prefix),
-            Block { statements } => {
+            Block(statements) => {
                 println!("{}Block", prefix);
                 let new_prefix = format!("{}  ", prefix);
                 for stmt in statements {
@@ -133,7 +133,7 @@ pub fn pretty_print_ast(program: Program) {
                 pretty_print_expr(*right, &new_prefix);
             }
             Unary { op, right } => {
-                println!("{}Binary", prefix);
+                println!("{}Unary", prefix);
                 println!("{}  operator: {}", prefix, op.kind);
                 println!("{}  right:", prefix);
                 pretty_print_expr(*right, &format!("{}    ", prefix));

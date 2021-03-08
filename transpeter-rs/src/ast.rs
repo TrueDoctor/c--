@@ -49,9 +49,7 @@ pub struct Ident {
 #[derive(Debug)]
 pub enum Statement {
     Declaration(Declaration),
-    Block {
-        statements: Vec<Statement>,
-    },
+    Block(Vec<Statement>),
     If {
         pos: Position,
         condition: Expr,
