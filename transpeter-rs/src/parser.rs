@@ -7,6 +7,9 @@ use crate::ast::*;
 use crate::token::{Token, TokenKind};
 use crate::util::{CompilerError, CompilerResult};
 
+#[cfg(test)]
+mod tests;
+
 fn binary_bp(op: &TokenKind) -> Option<(BinaryOpKind, (u8, u8))> {
     use BinaryOpKind::*;
 

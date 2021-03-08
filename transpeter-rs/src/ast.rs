@@ -1,6 +1,7 @@
 //! The abstract syntax tree.
 
 pub mod pretty_print;
+pub mod sexp;
 
 use std::fmt;
 

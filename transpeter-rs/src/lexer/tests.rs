@@ -1,7 +1,7 @@
-use transpeter::lexer::Lexer;
-use transpeter::token::TokenKind;
-use transpeter::token::TokenKind::*;
-use transpeter::util::CompilerResult;
+use super::Lexer;
+use crate::token::TokenKind;
+use crate::token::TokenKind::*;
+use crate::util::CompilerResult;
 
 fn tokenize(program: &str) -> CompilerResult<Vec<TokenKind>> {
     let mut res = Lexer::new(program)
@@ -134,6 +134,8 @@ fn keyword() {
     assert_eq!(tokenize("and").unwrap(), [And]);
     assert_eq!(tokenize("or").unwrap(), [Or]);
     assert_eq!(tokenize("not").unwrap(), [Not]);
+    assert_eq!(tokenize("true").unwrap(), [True]);
+    assert_eq!(tokenize("false").unwrap(), [False]);
 }
 
 #[test]
