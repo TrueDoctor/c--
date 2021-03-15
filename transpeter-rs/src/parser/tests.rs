@@ -40,32 +40,32 @@ fn function() {
 
     assert_matches!(
         parse_function("void f() {}").unwrap(),
-        Item::Function { name, return_type, parameters, .. } if name.name == "f"
-            && return_type.name == "void"
+        Item::Function(ItemFunction { name, return_type, parameters, .. }) if name.value == "f"
+            && return_type.value == "void"
             && parameters.is_empty(),
     );
     assert_matches!(
         parse_function("void f(int a) {}").unwrap(),
-        Item::Function { name, return_type, parameters, .. } if name.name == "f"
-            && return_type.name == "void"
+        Item::Function(ItemFunction { name, return_type, parameters, .. }) if name.value == "f"
+            && return_type.value == "void"
             && parameters.len() == 1,
     );
     assert_matches!(
         parse_function("void f(int a,) {}").unwrap(),
-        Item::Function { name, return_type, parameters, .. } if name.name == "f"
-            && return_type.name == "void"
+        Item::Function(ItemFunction { name, return_type, parameters, .. }) if name.value == "f"
+            && return_type.value == "void"
             && parameters.len() == 1,
     );
     assert_matches!(
         parse_function("void f(int a, int b) {}").unwrap(),
-        Item::Function { name, return_type, parameters, .. } if name.name == "f"
-            && return_type.name == "void"
+        Item::Function(ItemFunction { name, return_type, parameters, .. }) if name.value == "f"
+            && return_type.value == "void"
             && parameters.len() == 2,
     );
     assert_matches!(
         parse_function("void f(int a, int b,) {}").unwrap(),
-        Item::Function { name, return_type, parameters, .. } if name.name == "f"
-            && return_type.name == "void"
+        Item::Function(ItemFunction { name, return_type, parameters, .. }) if name.value == "f"
+            && return_type.value == "void"
             && parameters.len() == 2,
     );
 
@@ -84,11 +84,11 @@ fn declaration() {
 
     assert_matches!(
         parse_declaration("int a").unwrap(),
-        Declaration { type_, name, init: None } if type_.name == "int" && name.name == "a",
+        Declaration { type_, name, init: None } if type_.value == "int" && name.value == "a",
     );
     assert_matches!(
         parse_declaration("void a").unwrap(),
-        Declaration { type_, name, init: None } if type_.name == "void" && name.name == "a",
+        Declaration { type_, name, init: None } if type_.value == "void" && name.value == "a",
     );
 
     assert!(parse_declaration("string a").is_err());
@@ -108,12 +108,12 @@ fn statement() {
     assert_matches!(
         parse_statement("int a;").unwrap(),
         Statement::Declaration(Declaration { type_, name, init: None })
-            if type_.name == "int" && name.name == "a",
+            if type_.value == "int" && name.value == "a",
     );
     assert_matches!(
         parse_statement("int a = 42;").unwrap(),
         Statement::Declaration(Declaration { type_, name, init: Some(Expr::Int { value: 42, .. }) })
-            if type_.name == "int" && name.name == "a",
+            if type_.value == "int" && name.value == "a",
     );
     assert!(parse_statement("int a").is_err());
     assert!(parse_statement("int a = 42").is_err());
@@ -236,38 +236,38 @@ fn statement() {
     assert_matches!(
         parse_statement("a = 42;").unwrap(),
         Statement::Assign { name, op, expr: Expr::Int { value: 42, .. }}
-            if name.name == "a" && matches!(op.kind, AssignOpKind::Eq),
+            if name.value == "a" && matches!(op.kind, AssignOpKind::Eq),
     );
     assert_matches!(
         parse_statement("a += 42;").unwrap(),
         Statement::Assign { name, op, expr: Expr::Int { value: 42, .. }}
-            if name.name == "a" && matches!(op.kind, AssignOpKind::PlusEq),
+            if name.value == "a" && matches!(op.kind, AssignOpKind::PlusEq),
     );
     assert_matches!(
         parse_statement("a -= 42;").unwrap(),
         Statement::Assign { name, op, expr }
-            if name.name == "a"
+            if name.value == "a"
                 && matches!(op.kind, AssignOpKind::MinusEq)
                 && matches!(expr, Expr::Int { value: 42, .. }),
     );
     assert_matches!(
         parse_statement("a *= 42;").unwrap(),
         Statement::Assign { name, op, expr }
-            if name.name == "a"
+            if name.value == "a"
                 && matches!(op.kind, AssignOpKind::StarEq)
                 && matches!(expr, Expr::Int { value: 42, .. }),
     );
     assert_matches!(
         parse_statement("a /= 42;").unwrap(),
         Statement::Assign { name, op, expr }
-            if name.name == "a"
+            if name.value == "a"
                 && matches!(op.kind, AssignOpKind::SlashEq)
                 && matches!(expr, Expr::Int { value: 42, .. }),
     );
     assert_matches!(
         parse_statement("a %= 42;").unwrap(),
         Statement::Assign { name, op, expr }
-            if name.name == "a"
+            if name.value == "a"
                 && matches!(op.kind, AssignOpKind::PercentEq)
                 && matches!(expr, Expr::Int { value: 42, .. }),
     );
@@ -281,35 +281,35 @@ fn statement() {
     // function calls
     assert_matches!(
         parse_statement("f();").unwrap(),
-        Statement::Call { name, args } if name.name == "f" && matches!(
+        Statement::Call { name, args } if name.value == "f" && matches!(
             *args,
             [],
         ),
     );
     assert_matches!(
         parse_statement("f(1);").unwrap(),
-        Statement::Call { name, args } if name.name == "f" && matches!(
+        Statement::Call { name, args } if name.value == "f" && matches!(
             *args,
             [Expr::Int { value: 1, .. }],
         ),
     );
     assert_matches!(
         parse_statement("f(1,);").unwrap(),
-        Statement::Call { name, args } if name.name == "f" && matches!(
+        Statement::Call { name, args } if name.value == "f" && matches!(
             *args,
             [Expr::Int { value: 1, .. }],
         ),
     );
     assert_matches!(
         parse_statement("f(1, 2);").unwrap(),
-        Statement::Call { name, args } if name.name == "f" && matches!(
+        Statement::Call { name, args } if name.value == "f" && matches!(
             *args,
             [Expr::Int { value: 1, .. }, Expr::Int { value: 2, .. }],
         ),
     );
     assert_matches!(
         parse_statement("f(1, 2,);").unwrap(),
-        Statement::Call { name, args } if name.name == "f" && matches!(
+        Statement::Call { name, args } if name.value == "f" && matches!(
             *args,
             [Expr::Int { value: 1, .. }, Expr::Int { value: 2, .. }],
         ),

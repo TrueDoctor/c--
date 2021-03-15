@@ -53,7 +53,7 @@ pub struct Parser<I: Iterator<Item = Token>> {
 
 impl<I: Iterator<Item = Token>> Parser<I> {
     /// Creates a new `Parser` from a `Token` iterator.
-    pub fn new(tokens: I) -> Self {
+    fn new(tokens: I) -> Self {
         Self {
             iter: tokens.peekable(),
         }
@@ -82,7 +82,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         let token = self.next();
         let pos = token.pos;
         match token.kind {
-            TokenKind::Identifier(name) => Ok(Ident { pos, name }),
+            TokenKind::Identifier(value) => Ok(Ident { pos, value }),
             _ => Err(expected("identifier", token)),
         }
     }
@@ -91,7 +91,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         let token = self.next();
         let pos = token.pos;
         match token.kind {
-            TokenKind::Type(name) => Ok(Type { pos, name }),
+            TokenKind::Type(value) => Ok(Type { pos, value }),
             _ => Err(expected("type", token)),
         }
     }
@@ -105,7 +105,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         }
     }
 
-    pub fn parse_program(&mut self, name: &str) -> CompilerResult<Program> {
+    fn parse_program(&mut self, name: &str) -> CompilerResult<Program> {
         let mut items = Vec::new();
         loop {
             let item = match self.peek().kind {
@@ -119,12 +119,12 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                             let parameters =
                                 self.parse_list(Self::parse_declaration, &TokenKind::RightParen)?;
                             let statements = self.parse_block()?;
-                            Item::Function {
+                            Item::Function(ItemFunction {
                                 name: decl.name,
                                 return_type: decl.type_,
                                 parameters,
                                 statements,
-                            }
+                            })
                         }
                         TokenKind::Eq => {
                             // declaration with initialization
@@ -190,7 +190,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 self.expect(&TokenKind::LeftParen)?;
                 let condition = self.parse_expr()?;
                 self.expect(&TokenKind::RightParen)?;
-                let if_statement = Box::new(self.parse_statement()?);
+                let then_statement = Box::new(self.parse_statement()?);
                 let else_statement = if self.optional(&TokenKind::Else) {
                     Some(Box::new(self.parse_statement()?))
                 } else {
@@ -199,7 +199,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 Statement::If {
                     pos,
                     condition,
-                    if_statement,
+                    then_statement,
                     else_statement,
                 }
             }
@@ -347,8 +347,8 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         let token = self.next();
         let pos = token.pos;
         Ok(match token.kind {
-            TokenKind::Identifier(name) => {
-                let name = Ident { pos, name };
+            TokenKind::Identifier(value) => {
+                let name = Ident { pos, value };
                 if self.optional(&TokenKind::LeftParen) {
                     // function call
                     let args = self.parse_list(Self::parse_expr, &TokenKind::RightParen)?;
@@ -373,6 +373,6 @@ impl<I: Iterator<Item = Token>> Parser<I> {
     }
 }
 
-pub fn parse_program(tokens: Vec<Token>, program_name: &str) -> CompilerResult<Program> {
-    Parser::new(tokens.into_iter()).parse_program(program_name)
+pub fn parse_program<I: Iterator<Item = Token>>(iter: I, program_name: &str) -> CompilerResult<Program> {
+    Parser::new(iter).parse_program(program_name)
 }

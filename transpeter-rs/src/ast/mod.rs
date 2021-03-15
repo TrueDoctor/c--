@@ -15,15 +15,18 @@ pub struct Program {
 
 #[derive(Debug)]
 pub enum Item {
-    Function {
-        name: Ident,
-        return_type: Type,
-        parameters: Vec<Declaration>,
-        statements: Vec<Statement>,
-    },
-    // Const {},
-    // Struct {},
+    Function(ItemFunction),
+    // ItemConst {},
+    // ItemStruct {},
     Statement(Statement),
+}
+
+#[derive(Debug)]
+pub struct ItemFunction {
+    pub name: Ident,
+    pub return_type: Type,
+    pub parameters: Vec<Declaration>,
+    pub statements: Vec<Statement>,
 }
 
 #[derive(Debug)]
@@ -36,13 +39,13 @@ pub struct Declaration {
 #[derive(Debug)]
 pub struct Type {
     pub pos: Position,
-    pub name: String,
+    pub value: String,
 }
 
 #[derive(Debug)]
 pub struct Ident {
     pub pos: Position,
-    pub name: String,
+    pub value: String,
 }
 
 // statements
@@ -54,7 +57,7 @@ pub enum Statement {
     If {
         pos: Position,
         condition: Expr,
-        if_statement: Box<Statement>,
+        then_statement: Box<Statement>,
         else_statement: Option<Box<Statement>>,
     },
     While {

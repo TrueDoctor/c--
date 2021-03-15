@@ -17,11 +17,11 @@ fn debug_compile(input: &str, name: &str) {
                 println!("{:?}", token.kind);
             }
 
-            parse_program(tokens, name)
+            parse_program(tokens.into_iter(), name)
         })
         .map(|ast| {
             println!("[AST]");
-            pretty_print_ast(ast);
+            pretty_print_ast(&ast);
         })
         .unwrap_or_else(|err| {
             eprintln!("[Error]");

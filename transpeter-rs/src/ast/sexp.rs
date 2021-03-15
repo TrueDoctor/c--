@@ -36,9 +36,9 @@ impl Sexp {
                 Self::List(format!("{}", op.kind), vec![Self::from_expr(*right)])
             }
             Expr::Call { name, args } => {
-                Self::List(name.name, args.into_iter().map(Self::from_expr).collect())
+                Self::List(name.value, args.into_iter().map(Self::from_expr).collect())
             }
-            Expr::Var { name } => Self::Atom(name.name),
+            Expr::Var { name } => Self::Atom(name.value),
             Expr::Int { value, .. } => Self::Atom(format!("{}", value)),
         }
     }
