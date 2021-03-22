@@ -2,7 +2,7 @@ use std::io::{BufRead, Write};
 use std::path::Path;
 use std::{fs, io};
 
-use transpeter::compile;
+use transpeter::{compile, CompilerOptions};
 
 use clap::{App, Arg};
 
@@ -16,7 +16,15 @@ fn repl() -> io::Result<()> {
         print!("> ");
         stdout.flush()?;
         match input.next() {
-            Some(line) => compile(&line?, "<repl>", true, true),
+            Some(line) => compile(
+                &line?,
+                "<repl>",
+                CompilerOptions {
+                    debug: true,
+                    run: true,
+                    no_std: false,
+                },
+            ),
             None => {
                 println!();
                 break;
@@ -34,28 +42,28 @@ fn main() -> io::Result<()> {
     let matches = App::new("transpeter")
         .version("0.1")
         .arg(Arg::with_name("input").help("The input file"))
-        .arg(
-            Arg::with_name("debug")
-                .long("debug")
-                .requires("input")
-                .help("Turn on debugging output"),
-        )
-        .arg(
-            Arg::with_name("run")
-                .long("run")
-                .requires("input")
-                .help("Runs the program"),
-        )
+        .arg(Arg::with_name("debug")
+            .long("debug")
+            .requires("input")
+            .help("Turn on debugging output"))
+        .arg(Arg::with_name("run")
+            .long("run")
+            .requires("input")
+            .help("Runs the program"))
+        .arg(Arg::with_name("no-std")
+            .long("no-std")
+            .help("Compiles without std"))
         .get_matches();
 
     if let Some(path) = matches.value_of("input") {
         let program = fs::read_to_string(&path)?;
-        let name = Path::file_stem(path.as_ref())
-            .and_then(OsStr::to_str)
-            .unwrap();
-        let debug = matches.is_present("debug");
-        let run = matches.is_present("run");
-        compile(&program, name, debug, run);
+        let name = Path::file_stem(path.as_ref()).and_then(OsStr::to_str).unwrap();
+        let options = CompilerOptions {
+            debug: matches.is_present("debug"),
+            run: matches.is_present("run"),
+            no_std: matches.is_present("no-std"),
+        };
+        compile(&program, name, options);
     } else {
         repl()?;
     }

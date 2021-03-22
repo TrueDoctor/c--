@@ -391,10 +391,13 @@ impl CodeGen {
 }
 
 /// Generates a [`Program`] from an [`ast::Program`], while doing semantic analysis.
-pub fn generate_code(ast: ast::Program) -> CompilerResult<Program> {
+pub fn generate_code(ast: ast::Program, std: Option<Program>) -> CompilerResult<Program> {
     use ast::Item::*;
 
     let mut code_gen = CodeGen::new();
+    if let Some(std_program) = std {
+        code_gen.functions = std_program.functions;
+    }
     for item in ast.items {
         match item {
             Function(func) => code_gen.generate_function(func)?,

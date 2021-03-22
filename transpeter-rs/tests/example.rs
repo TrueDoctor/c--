@@ -1,6 +1,6 @@
-use transpeter::compile;
+use transpeter::*;
 
-const PROGRAM: &str = r#"
+const EXAMPLE: &str = r#"
 void println(int x) {
     inline "<.>";
 }
@@ -36,5 +36,54 @@ main();
 
 #[test]
 fn example() {
-    assert!(compile(PROGRAM, "program", false, true).is_some());
+    assert!(
+        compile(
+            EXAMPLE,
+            "example",
+            CompilerOptions {
+                debug: false,
+                run: true,
+                no_std: false,
+            },
+        )
+        .is_some(),
+    );
+}
+
+const STDLIB: &str = r#"
+int c = get_char();
+put_char(c);
+put_int(42);
+"#;
+
+#[test]
+fn stdlib() {
+    assert!(
+        compile(
+            STDLIB,
+            "stdlib_test",
+            CompilerOptions {
+                debug: false,
+                run: false,
+                no_std: false,
+            },
+        )
+        .is_some(),
+    );
+}
+
+#[test]
+fn no_stdlib() {
+    assert!(
+        compile(
+            STDLIB,
+            "no_stdlib_test",
+            CompilerOptions {
+                debug: false,
+                run: false,
+                no_std: true,
+            },
+        )
+        .is_none(),
+    );
 }
