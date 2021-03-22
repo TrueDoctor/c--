@@ -1,4 +1,5 @@
 pub mod ast;
+pub mod brainfuck;
 pub mod code_gen;
 pub mod lexer;
 pub mod parser;
@@ -12,8 +13,9 @@ use parser::parse_program;
 
 /// Compiles `input` to a [`Program`].
 /// If `debug` is true, prints debug compilation info.
-pub fn compile(input: &str, name: &str, debug: bool) -> Option<Program> {
-    if debug {
+/// If `run` is true, runs the resulting program.
+pub fn compile(input: &str, name: &str, debug: bool, run: bool) -> Option<Program> {
+    let program = if debug {
         tokenize(input)
             .and_then(|tokens| {
                 println!("[Tokens]");
@@ -40,7 +42,7 @@ pub fn compile(input: &str, name: &str, debug: bool) -> Option<Program> {
                 eprintln!("\n[Error]");
                 eprintln!("{}", err);
             })
-            .ok()
+            .ok()?
     } else {
         tokenize(input)
             .and_then(|tokens| parse_program(tokens.into_iter(), name))
@@ -49,6 +51,10 @@ pub fn compile(input: &str, name: &str, debug: bool) -> Option<Program> {
                 eprintln!("[Error]");
                 eprintln!("{}", err);
             })
-            .ok()
+            .ok()?
+    };
+    if run {
+        brainfuck::run(&program.code);
     }
+    Some(program)
 }

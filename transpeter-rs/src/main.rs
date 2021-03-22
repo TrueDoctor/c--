@@ -16,7 +16,7 @@ fn repl() -> io::Result<()> {
         print!("> ");
         stdout.flush()?;
         match input.next() {
-            Some(line) => compile(&line?, "<repl>", true),
+            Some(line) => compile(&line?, "<repl>", true, true),
             None => {
                 println!();
                 break;
@@ -40,6 +40,12 @@ fn main() -> io::Result<()> {
                 .requires("input")
                 .help("Turn on debugging output"),
         )
+        .arg(
+            Arg::with_name("run")
+                .long("run")
+                .requires("input")
+                .help("Runs the program"),
+        )
         .get_matches();
 
     if let Some(path) = matches.value_of("input") {
@@ -48,7 +54,8 @@ fn main() -> io::Result<()> {
             .and_then(OsStr::to_str)
             .unwrap();
         let debug = matches.is_present("debug");
-        compile(&program, name, debug);
+        let run = matches.is_present("run");
+        compile(&program, name, debug, run);
     } else {
         repl()?;
     }
