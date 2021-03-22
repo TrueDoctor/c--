@@ -186,12 +186,7 @@ impl CodeGen {
                 }
                 self.exit_scope();
             }
-            If {
-                condition,
-                then_statement,
-                else_statement,
-                ..
-            } => match else_statement {
+            If { condition, then_statement, else_statement, .. } => match else_statement {
                 Some(else_statement) => {
                     // "[-]+>{condition}[{statement}<->[-]]<[{else_statement}[-]]"
                     self.code.push_str("[-]+>");
@@ -212,11 +207,7 @@ impl CodeGen {
                     self.code.push_str("[-]]");
                 }
             },
-            While {
-                condition,
-                statement,
-                ..
-            } => {
+            While { condition, statement, .. } => {
                 // "{condition}[{statement}{condition}]"
                 let old_code = mem::replace(&mut self.code, String::new()); // temporarily replace self.code
                 self.generate_expr(&condition)?;
@@ -227,9 +218,7 @@ impl CodeGen {
                 self.code.push_str(&cond);
                 self.code.push(']');
             }
-            Repeat {
-                expr, statement, ..
-            } => {
+            Repeat { expr, statement, .. } => {
                 // "{expr}[>{statement}<-]"
                 self.generate_expr(&expr)?;
                 self.code.push_str("[>");
@@ -257,13 +246,7 @@ impl CodeGen {
                 self.generate_expr(&expr)?;
                 match op.kind {
                     Eq => {
-                        write!(
-                            self.code,
-                            "{left}[-]{right}[-{left}+{right}]",
-                            left = left,
-                            right = right,
-                        )
-                        .unwrap();
+                        write!(self.code, "{left}[-]{right}[-{left}+{right}]", left = left, right = right).unwrap();
                     }
                     PlusEq => {
                         write!(self.code, "[-{left}+{right}]", left = left, right = right).unwrap();
@@ -278,7 +261,6 @@ impl CodeGen {
                         write!(self.code, ">[-]+>[-]>[-]>[-]<<<<{left}[-{right}-[>+>>]>[[-<+>]+>+>>]<<<<{left}]{right}>>[-<<{left}+{right}>>]<<", left = left, right = right).unwrap();
                     }
                     PercentEq => {
-                        //                 >[-]+>[-]>[-]>[-]<<<<{left}[-{right}-[>+>>]>[[-<+>]+>+>>]<<<<{left}]{right}>-[-<{left}+{right}>]<
                         write!(self.code, ">[-]+>[-]>[-]>[-]<<<<{left}[-{right}-[>+>>]>[[-<+>]+> >>]<<<<{left}]{right}>-[-<{left}+{right}>]<", left = left, right = right).unwrap();
                     }
                 }
@@ -300,36 +282,21 @@ impl CodeGen {
                 self.stack_ptr += 1;
                 self.generate_expr(right)?;
                 self.stack_ptr -= 1;
-                match op.kind {
-                    Plus => self.code.push_str("[-<+>]"),
-                    Minus => self.code.push_str("[-<->]"),
-                    Star => self
-                        .code
-                        .push_str(">[-]>[-]<<<[->>+<<]>[->[->+<<<+>>]>[-<+>]<<]"),
-                    Slash => self.code.push_str(
-                        ">[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+>+>>]<<<<<]>>>[-<<<+>>>]<<",
-                    ),
-                    // >[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+>+>>]<<<<<]>>-[-<<+>>]<
-                    Percent => self.code.push_str(
-                        ">[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+> >>]<<<<<]>>-[-<<+>>]<",
-                    ),
-                    EqEq => self.code.push_str("<[->-<]+>[<->[-]]"),
-                    NotEq => self.code.push_str("<[->-<]>[<+>[-]]"),
-                    Greater => self.code.push_str(
-                        ">[-]>[-]<<[-<[->>+>+<<<]>>[-<<+>>]>[<<<->>>[-]]<<]<[>+<[-]]>[-<+>]",
-                    ),
-                    GreaterEq => self
-                        .code
-                        .push_str(">[-]>[-]<<<[->[->+>+<<]>[-<+>]>[<<->>[-]]<<<]+>[<->[-]]"),
-                    Less => self
-                        .code
-                        .push_str(">[-]>[-]<<<[->[->+>+<<]>[-<+>]>[<<->>[-]]<<<]>[<+>[-]]"),
-                    LessEq => self.code.push_str(
-                        ">[-]>[-]<<[-<[->>+>+<<<]>>[-<<+>>]>[<<<->>>[-]]<<]<[>+<[-]]+>[-<->]",
-                    ),
-                    And => self.code.push_str(">[-]<[<[>>+<<[-]]>[-]]<[-]>>[-<<+>>]<"),
-                    Or => self.code.push_str(">[-]<[>+<[-]]<[>>[-]+<<[-]]>>[-<<+>>]<"),
-                }
+                self.code.push_str(match op.kind {
+                    Plus => "[-<+>]",
+                    Minus => "[-<->]",
+                    Star => ">[-]>[-]<<<[->>+<<]>[->[->+<<<+>>]>[-<+>]<<]",
+                    Slash => ">[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+>+>>]<<<<<]>>>[-<<<+>>>]<<",
+                    Percent => ">[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+> >>]<<<<<]>>-[-<<+>>]<",
+                    EqEq => "<[->-<]+>[<->[-]]",
+                    NotEq => "<[->-<]>[<+>[-]]",
+                    Greater => ">[-]>[-]<<[-<[->>+>+<<<]>>[-<<+>>]>[<<<->>>[-]]<<]<[>+<[-]]>[-<+>]",
+                    GreaterEq => ">[-]>[-]<<<[->[->+>+<<]>[-<+>]>[<<->>[-]]<<<]+>[<->[-]]",
+                    Less => ">[-]>[-]<<<[->[->+>+<<]>[-<+>]>[<<->>[-]]<<<]>[<+>[-]]",
+                    LessEq => ">[-]>[-]<<[-<[->>+>+<<<]>>[-<<+>>]>[<<<->>>[-]]<<]<[>+<[-]]+>[-<->]",
+                    And => ">[-]<[<[>>+<<[-]]>[-]]<[-]>>[-<<+>>]<",
+                    Or => ">[-]<[>+<[-]]<[>>[-]+<<[-]]>>[-<<+>>]<",
+                });
                 self.code.push('<');
             }
             Unary { op, right } => {

@@ -85,14 +85,8 @@ pub fn run(program: &str) {
                 stdout.flush().unwrap();
             }
             GetChar => {
-                cells[ptr] = Wrapping(
-                    stdin
-                        .lock()
-                        .bytes()
-                        .next()
-                        .map(|res| res.unwrap())
-                        .unwrap_or(255),
-                );
+                let c = stdin.lock().bytes().next().map(|res| res.unwrap()).unwrap_or(255);
+                cells[ptr] = Wrapping(c);
             }
             JumpIf(cond, new_i) => {
                 if cond.check(cells[ptr]) {

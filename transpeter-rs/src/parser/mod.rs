@@ -53,9 +53,7 @@ struct Parser<I: Iterator<Item = Token>> {
 impl<I: Iterator<Item = Token>> Parser<I> {
     /// Creates a new `Parser` from a `Token` iterator.
     fn new(tokens: I) -> Self {
-        Self {
-            iter: tokens.peekable(),
-        }
+        Self { iter: tokens.peekable() }
     }
 
     /// Consumes and returns the next `Token`.
@@ -115,8 +113,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                     match token.kind {
                         TokenKind::LeftParen => {
                             // function definition
-                            let parameters =
-                                self.parse_list(Self::parse_declaration, &TokenKind::RightParen)?;
+                            let parameters = self.parse_list(Self::parse_declaration, &TokenKind::RightParen)?;
                             let statements = self.parse_block()?;
                             Item::Function(ItemFunction {
                                 name: decl.name,
@@ -162,8 +159,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
     fn parse_declaration(&mut self) -> CompilerResult<Declaration> {
         let type_ = self.expect_type()?;
         let name = self.expect_identifier()?;
-        let init = None;
-        Ok(Declaration { type_, name, init })
+        Ok(Declaration { type_, name, init: None })
     }
 
     fn parse_block(&mut self) -> CompilerResult<Vec<Statement>> {
@@ -312,10 +308,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
             let token = self.next();
             let expr = self.parse_expr_bp(r_bp)?;
             Expr::Unary {
-                op: UnaryOp {
-                    pos: token.pos,
-                    kind: op,
-                },
+                op: UnaryOp { pos: token.pos, kind: op },
                 right: Box::new(expr),
             }
         } else {
@@ -331,10 +324,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
             let rhs = self.parse_expr_bp(r_bp)?;
             lhs = Expr::Binary {
                 left: Box::new(lhs),
-                op: BinaryOp {
-                    pos: op_token.pos,
-                    kind: op,
-                },
+                op: BinaryOp { pos: op_token.pos, kind: op },
                 right: Box::new(rhs),
             };
         }
@@ -362,9 +352,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                 self.expect(&TokenKind::RightParen)?;
                 expr
             }
-            TokenKind::IntLiteral(value) | TokenKind::CharLiteral(value) => {
-                Expr::Int { pos, value }
-            }
+            TokenKind::IntLiteral(value) | TokenKind::CharLiteral(value) => Expr::Int { pos, value },
             TokenKind::True => Expr::Int { pos, value: 1 },
             TokenKind::False => Expr::Int { pos, value: 0 },
             _ => return err_expected("expression", token),

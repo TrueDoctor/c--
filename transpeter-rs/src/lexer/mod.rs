@@ -4,7 +4,7 @@ use std::fmt;
 use std::{iter::Peekable, str::CharIndices};
 
 use crate::token::{Token, TokenKind};
-use crate::util::{compiler_error, CompilerError, CompilerResult, Position};
+use crate::util::{compiler_error, CompilerResult, Position};
 
 #[cfg(test)]
 mod tests;
@@ -45,13 +45,10 @@ impl<'a> Lexer<'a> {
     /// Creates a [`Token`] from the token type `tt`.
     #[allow(clippy::unnecessary_wraps)]
     fn token(&mut self, tk: TokenKind) -> CompilerResult<Token> {
-        Ok(Token {
-            kind: tk,
-            pos: self.pos,
-        })
+        Ok(Token { kind: tk, pos: self.pos })
     }
 
-    /// Creates a [`CompilerError`] from the message `msg`.
+    /// Creates an error from the message `msg`.
     fn error<T, S: fmt::Display>(&mut self, msg: S) -> CompilerResult<T> {
         self.done = true;
         compiler_error(self.pos, msg)
@@ -132,7 +129,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    /// Returns the next [`Token`] or a [`CompilerError`].
+    /// Returns the next [`Token`] or an error.
     pub fn next_token(&mut self) -> CompilerResult<Token> {
         // short-circuit if the lexer is already done
         if self.done {
