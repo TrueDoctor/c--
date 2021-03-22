@@ -79,8 +79,9 @@ impl CodeGen {
     }
 
     fn exit_scope(&mut self) {
-        let scope = self.variables.pop().expect("no scope available");
-        for _ in 0..scope.len() {
+        let old_vars = self.variables.pop().expect("no scope available").len();
+        self.stack_ptr -= old_vars;
+        for _ in 0..old_vars {
             self.code.push('<');
         }
     }
@@ -113,8 +114,15 @@ impl CodeGen {
 
         // generate body
         let mut has_return = false;
+        let void = func.return_type.value == "void";
         for stmt in func.statements {
-            if let ast::Statement::Return { expr, .. } = &stmt {
+            if let ast::Statement::Return { expr, pos } = &stmt {
+                if void {
+                    return compiler_error(
+                        *pos,
+                        "unexpected `return` statement in function returning `void`",
+                    );
+                }
                 self.generate_expr(expr)?;
                 let old_vars = self.variables.last().expect("no scope available").len();
                 if old_vars > 0 {
@@ -135,7 +143,6 @@ impl CodeGen {
             }
             self.generate_statement(stmt)?;
         }
-        let void = func.return_type.value == "void";
         if !(has_return || void) {
             return compiler_error(
                 func.name.pos,
@@ -302,7 +309,7 @@ impl CodeGen {
                     Slash => self.code.push_str(
                         ">[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+>+>>]<<<<<]>>>[-<<<+>>>]<<",
                     ),
-                    //                             >[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+>+>>]<<<<<]>>-[-<<+>>]<
+                    // >[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+>+>>]<<<<<]>>-[-<<+>>]<
                     Percent => self.code.push_str(
                         ">[-]+>[-]>[-]>[-]<<<<<[->-[>+>>]>[[-<+>]+> >>]<<<<<]>>-[-<<+>>]<",
                     ),

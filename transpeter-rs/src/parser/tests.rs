@@ -104,20 +104,6 @@ fn declaration() {
 fn statement() {
     let parse_statement = |input| parse(input, Parser::parse_statement);
 
-    // declarations
-    assert_matches!(
-        parse_statement("int a;").unwrap(),
-        Statement::Declaration(Declaration { type_, name, init: None })
-            if type_.value == "int" && name.value == "a",
-    );
-    assert_matches!(
-        parse_statement("int a = 42;").unwrap(),
-        Statement::Declaration(Declaration { type_, name, init: Some(Expr::Int { value: 42, .. }) })
-            if type_.value == "int" && name.value == "a",
-    );
-    assert!(parse_statement("int a").is_err());
-    assert!(parse_statement("int a = 42").is_err());
-
     // blocks
     assert_matches!(
         parse_statement("{}").unwrap(),

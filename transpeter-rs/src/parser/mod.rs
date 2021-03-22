@@ -172,6 +172,14 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         loop {
             match self.peek().kind {
                 TokenKind::RightBrace | TokenKind::Eof => break,
+                TokenKind::Type(_) => {
+                    let mut decl = self.parse_declaration()?;
+                    if self.optional(&TokenKind::Eq) {
+                        decl.init = Some(self.parse_expr()?);
+                    }
+                    self.expect(&TokenKind::Semicolon)?;
+                    statements.push(Statement::Declaration(decl));
+                }
                 _ => statements.push(self.parse_statement()?),
             }
         }
@@ -260,14 +268,6 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                     }
                     _ => return err_expected("string literal", token),
                 }
-            }
-            TokenKind::Type(_) => {
-                let mut decl = self.parse_declaration()?;
-                if self.optional(&TokenKind::Eq) {
-                    decl.init = Some(self.parse_expr()?);
-                }
-                self.expect(&TokenKind::Semicolon)?;
-                Statement::Declaration(decl)
             }
             TokenKind::Identifier(_) => {
                 let name = self.expect_identifier()?;

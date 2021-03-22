@@ -21,7 +21,7 @@ void main() {
     } else {
         println(x * y);
     }
-    inline "blub +-><[.,]";
+    inline "blub +-><";
     repeat (x) {
         println(x);
     }
@@ -29,7 +29,6 @@ void main() {
         x -= 1 + 3 / 4 * 1;
     }
     assert(x == y);
-    return 0;
 }
 
 main();
