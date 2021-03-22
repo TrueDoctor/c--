@@ -98,7 +98,7 @@ pub fn pretty_print_ast(program: &Program) {
             }
             Inline { code, .. } => {
                 println!("{}Inline", prefix);
-                println!("{}  {}", prefix, String::from_utf8(code.to_vec()).unwrap());
+                println!("{}  {}", prefix, std::str::from_utf8(code).unwrap());
             }
             Assign { name, op, expr } => {
                 println!("{}Assign", prefix);
@@ -148,12 +148,10 @@ pub fn pretty_print_ast(program: &Program) {
                 }
             }
             Var { name } => {
-                println!("{}Var", prefix);
-                println!("{}  {}", prefix, name.value);
+                println!("{}Var {}", prefix, name.value);
             }
             Int { value, .. } => {
-                println!("{}Int", prefix);
-                println!("{}  {}", prefix, value);
+                println!("{}Int {}", prefix, value);
             }
         }
     }

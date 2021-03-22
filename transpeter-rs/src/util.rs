@@ -13,8 +13,8 @@ pub struct CompilerError {
 }
 
 impl CompilerError {
-    /// Creates a new `CompilerError` from the given message and a [`Position`].
-    pub fn new<S: fmt::Display>(message: S, pos: Position) -> Self {
+    /// Creates a new `CompilerError` from a [`Position`] and the given message.
+    pub fn new<S: ToString>(pos: Position, message: S) -> Self {
         Self {
             pos,
             message: message.to_string(),
@@ -26,6 +26,10 @@ impl fmt::Display for CompilerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}: {}", self.pos, self.message)
     }
+}
+
+pub fn compiler_error<S: ToString, T>(pos: Position, message: S) -> CompilerResult<T> {
+    Err(CompilerError::new(pos, message))
 }
 
 /// A type to track the position of a token in a program.

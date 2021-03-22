@@ -158,7 +158,6 @@ impl fmt::Display for TokenKind {
     }
 }
 
-/// Custom character formatting.
 fn fmt_char(f: &mut fmt::Formatter<'_>, c: u8) -> fmt::Result {
     match c {
         0x07 => f.write_str("\\a"),

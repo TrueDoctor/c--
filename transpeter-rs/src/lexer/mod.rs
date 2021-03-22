@@ -4,7 +4,7 @@ use std::fmt;
 use std::{iter::Peekable, str::CharIndices};
 
 use crate::token::{Token, TokenKind};
-use crate::util::{CompilerError, CompilerResult, Position};
+use crate::util::{compiler_error, CompilerError, CompilerResult, Position};
 
 #[cfg(test)]
 mod tests;
@@ -54,7 +54,7 @@ impl<'a> Lexer<'a> {
     /// Creates a [`CompilerError`] from the message `msg`.
     fn error<T, S: fmt::Display>(&mut self, msg: S) -> CompilerResult<T> {
         self.done = true;
-        Err(CompilerError::new(msg, self.pos))
+        compiler_error(self.pos, msg)
     }
 
     /// A combinator that consumes `char`s while they satisfy `pred`.
@@ -89,7 +89,7 @@ impl<'a> Lexer<'a> {
     }
 
     /// Consumes a `char` in a char or string literal.
-    fn consume_char(&mut self, c: char) -> Result<u8, CompilerError> {
+    fn consume_char(&mut self, c: char) -> CompilerResult<u8> {
         if c == '\\' {
             if let Some(escape) = self.next() {
                 match escape {
@@ -108,7 +108,12 @@ impl<'a> Lexer<'a> {
                             self.next().and_then(|x| x.to_digit(16)),
                             self.next().and_then(|x| x.to_digit(16)),
                         ) {
-                            return Ok((a * 16 + b) as u8);
+                            let value = (a * 16 + b) as u8;
+                            return if value.is_ascii() {
+                                Ok(value)
+                            } else {
+                                self.error(format!("invalid ASCII character: '\\x{:02X}'", value))
+                            };
                         }
                     }
                     _ => {}

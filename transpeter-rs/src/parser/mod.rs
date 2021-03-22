@@ -5,7 +5,7 @@ use std::iter::Peekable;
 
 use crate::ast::*;
 use crate::token::{Token, TokenKind};
-use crate::util::{CompilerError, CompilerResult};
+use crate::util::{compiler_error, CompilerResult};
 
 #[cfg(test)]
 mod tests;
@@ -42,12 +42,11 @@ fn unary_bp(op: &TokenKind) -> Option<(UnaryOpKind, u8)> {
     })
 }
 
-fn expected(msg: impl fmt::Display, token: Token) -> CompilerError {
-    CompilerError::new(format!("expected {}, got {}", msg, token.kind), token.pos)
+fn err_expected<T>(msg: impl fmt::Display, token: Token) -> CompilerResult<T> {
+    compiler_error(token.pos, format!("expected {}, got {}", msg, token.kind))
 }
 
-/// The parser state.
-pub struct Parser<I: Iterator<Item = Token>> {
+struct Parser<I: Iterator<Item = Token>> {
     iter: Peekable<I>,
 }
 
@@ -74,7 +73,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         if &token.kind == tk {
             Ok(token)
         } else {
-            Err(expected(tk, token))
+            err_expected(tk, token)
         }
     }
 
@@ -83,7 +82,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         let pos = token.pos;
         match token.kind {
             TokenKind::Identifier(value) => Ok(Ident { pos, value }),
-            _ => Err(expected("identifier", token)),
+            _ => err_expected("identifier", token),
         }
     }
 
@@ -92,7 +91,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         let pos = token.pos;
         match token.kind {
             TokenKind::Type(value) => Ok(Type { pos, value }),
-            _ => Err(expected("type", token)),
+            _ => err_expected("type", token),
         }
     }
 
@@ -133,7 +132,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                             Item::Statement(Statement::Declaration(decl))
                         }
                         TokenKind::Semicolon => Item::Statement(Statement::Declaration(decl)),
-                        _ => return Err(expected("function definition or declaration", token)),
+                        _ => return err_expected("function definition or declaration", token),
                     }
                 }
                 _ => Item::Statement(self.parse_statement()?),
@@ -247,19 +246,19 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                                 count += 1;
                             } else if c == b']' {
                                 if count == 0 {
-                                    return Err(CompilerError::new("unexpected ']' in inline code", pos));
+                                    return compiler_error(pos, "unexpected ']' in inline code");
                                 } else {
                                     count -= 1;
                                 }
                             }
                         }
                         if count > 0 {
-                            return Err(CompilerError::new("missing ']' in inline code", pos));
+                            return compiler_error(pos, "missing ']' in inline code");
                         }
 
                         Statement::Inline { pos, code }
                     }
-                    _ => return Err(expected("string literal", token)),
+                    _ => return err_expected("string literal", token),
                 }
             }
             TokenKind::Type(_) => {
@@ -288,7 +287,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                         TokenKind::StarEq => AssignOpKind::StarEq,
                         TokenKind::SlashEq => AssignOpKind::SlashEq,
                         TokenKind::PercentEq => AssignOpKind::PercentEq,
-                        _ => return Err(expected("function call or assignment", token)),
+                        _ => return err_expected("function call or assignment", token),
                     };
                     let op = AssignOp { pos, kind };
                     let expr = self.parse_expr()?;
@@ -296,7 +295,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
                     Statement::Assign { name, op, expr }
                 }
             }
-            _ => return Err(expected("statement", self.next())),
+            _ => return err_expected("statement", self.next()),
         })
     }
 
@@ -368,7 +367,7 @@ impl<I: Iterator<Item = Token>> Parser<I> {
             }
             TokenKind::True => Expr::Int { pos, value: 1 },
             TokenKind::False => Expr::Int { pos, value: 0 },
-            _ => return Err(expected("expression", token)),
+            _ => return err_expected("expression", token),
         })
     }
 }

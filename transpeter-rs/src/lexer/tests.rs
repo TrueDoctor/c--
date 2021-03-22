@@ -172,10 +172,12 @@ fn char_literal() {
     assert_eq!(tokenize("'\\\"'").unwrap(), [CharLiteral(34)]);
     assert_eq!(tokenize("'\\\\'").unwrap(), [CharLiteral(92)]);
     assert_eq!(tokenize("'\\x12'").unwrap(), [CharLiteral(0x12)]);
-    assert_eq!(tokenize("'\\xab'").unwrap(), [CharLiteral(0xAB)]);
-    assert_eq!(tokenize("'\\xAB'").unwrap(), [CharLiteral(0xAB)]);
+    assert_eq!(tokenize("'\\x7b'").unwrap(), [CharLiteral(0x7B)]);
+    assert_eq!(tokenize("'\\x7B'").unwrap(), [CharLiteral(0x7B)]);
 
     // invalid escape sequences
+    assert!(tokenize("'\\xAB'").is_err());
+    assert!(tokenize("'\\xab'").is_err());
     assert!(tokenize("'\\c'").is_err());
     assert!(tokenize("'\\x'").is_err());
     assert!(tokenize("'\\x1'").is_err());
@@ -212,6 +214,8 @@ fn string_literal() {
     assert_eq!(tokenize("\"\\x42\"").unwrap(), [StringLiteral(vec![0x42])]);
 
     // invalid escape sequences
+    assert!(tokenize("\"\\xAB\"").is_err());
+    assert!(tokenize("\"\\xab\"").is_err());
     assert!(tokenize("\"\\c\"").is_err());
     assert!(tokenize("\"\\x\"").is_err());
     assert!(tokenize("\"\\x1\"").is_err());
