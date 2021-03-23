@@ -52,7 +52,7 @@ fn main() -> io::Result<()> {
             .help("Runs the program"))
         .arg(Arg::with_name("no-std")
             .long("no-std")
-            .help("Compiles without std"))
+            .help("Compiles without the standard library"))
         .get_matches();
 
     if let Some(path) = matches.value_of("input") {

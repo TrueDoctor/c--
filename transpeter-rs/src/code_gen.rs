@@ -53,8 +53,9 @@ impl CodeGen {
     fn declared(&self, var: &str) -> bool {
         self.variables
             .iter()
-            .rev()
-            .any(|scope| scope.contains_key(var))
+            .last()
+            .map(|scope| scope.contains_key(var))
+            .expect("no scope available")
     }
 
     fn define_var(&mut self, name: String) {
@@ -89,6 +90,12 @@ impl CodeGen {
     // generate
 
     fn generate_function(&mut self, func: ast::ItemFunction) -> CompilerResult<()> {
+        if self.functions.contains_key(&func.name.value) {
+            return compiler_error(
+                func.name.pos,
+                format!("function `{}` is defined multiple times", func.name.value),
+            );
+        }
         let old_variables = mem::replace(&mut self.variables, Self::new_var_map());
         let old_code = mem::replace(&mut self.code, String::new());
 
@@ -153,8 +160,7 @@ impl CodeGen {
         self.exit_scope();
         let code = mem::replace(&mut self.code, old_code);
         self.variables = old_variables;
-        self.functions
-            .insert(func.name.value, Function { void, arity, code });
+        self.functions.insert(func.name.value, Function { void, arity, code });
         Ok(())
     }
 

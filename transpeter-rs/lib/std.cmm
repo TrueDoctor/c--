@@ -8,10 +8,6 @@ void put_char(int c) {
     inline "<.>";
 }
 
-void put_digit(int i) {
-    put_char(i + '0');
-}
-
 void put_int(int i) {
     # divmod: https://esolangs.org/wiki/Brainfuck_algorithms#Divmod_algorithm
     # # >n 10 0 0 0 0

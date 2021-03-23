@@ -13,15 +13,17 @@ use parser::parse_program;
 
 const STD: &str = include_str!("../lib/std.cmm");
 
+/// Options passed to [`compile`].
 pub struct CompilerOptions {
+    /// Print debug output.
     pub debug: bool,
+    /// Run the program.
     pub run: bool,
+    /// Compile without the standard library.
     pub no_std: bool,
 }
 
 /// Compiles `input` to a [`Program`].
-/// If `debug` is true, prints debug compilation info.
-/// If `run` is true, runs the resulting program.
 pub fn compile(input: &str, name: &str, options: CompilerOptions) -> Option<Program> {
     let program = tokenize(input)
         .and_then(|tokens| parse_program(tokens.into_iter(), name))
@@ -34,7 +36,21 @@ pub fn compile(input: &str, name: &str, options: CompilerOptions) -> Option<Prog
             let std = if options.no_std {
                 None
             } else {
-                Some(compile(STD, "std", CompilerOptions { no_std: true, ..options }).unwrap())
+                if options.debug {
+                    println!("Compiling std...");
+                }
+                Some(
+                    compile(
+                        STD,
+                        "std",
+                        CompilerOptions {
+                            debug: false,
+                            run: false,
+                            no_std: true,
+                        },
+                    )
+                    .unwrap(),
+                )
             };
             generate_code(ast, std)
         })
