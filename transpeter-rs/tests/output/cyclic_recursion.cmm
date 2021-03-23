@@ -1,0 +1,8 @@
+# check cyclic recursion
+void foo() {
+    bar();
+}
+
+void bar() {
+    foo();
+}

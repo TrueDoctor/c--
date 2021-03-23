@@ -1,0 +1,47 @@
+int a = 0;
+int b = 1;
+int c = 42;
+
+# >
+put_int(a > a);
+put_int(c > c);
+put_int(a > b);
+put_int(b > a);
+put_int(a > c);
+put_int(c > a);
+put_int(b > c);
+put_int(c > b);
+put_char('\n');
+
+# >=
+put_int(a >= a);
+put_int(c >= c);
+put_int(a >= b);
+put_int(b >= a);
+put_int(a >= c);
+put_int(c >= a);
+put_int(b >= c);
+put_int(c >= b);
+put_char('\n');
+
+# <
+put_int(a < a);
+put_int(c < c);
+put_int(a < b);
+put_int(b < a);
+put_int(a < c);
+put_int(c < a);
+put_int(b < c);
+put_int(c < b);
+put_char('\n');
+
+# <=
+put_int(a <= a);
+put_int(c <= c);
+put_int(a <= b);
+put_int(b <= a);
+put_int(a <= c);
+put_int(c <= a);
+put_int(b <= c);
+put_int(c <= b);
+put_char('\n');

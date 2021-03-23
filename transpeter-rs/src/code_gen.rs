@@ -32,6 +32,7 @@ struct CodeGen {
     functions: HashMap<String, Function>,
     stack_ptr: usize,
     code: String,
+    current_function: Option<String>,
 }
 
 impl CodeGen {
@@ -41,6 +42,7 @@ impl CodeGen {
             functions: HashMap::new(),
             stack_ptr: 0,
             code: String::new(),
+            current_function: None,
         }
     }
 
@@ -90,10 +92,11 @@ impl CodeGen {
     // generate
 
     fn generate_function(&mut self, func: ast::ItemFunction) -> CompilerResult<()> {
-        if self.functions.contains_key(&func.name.value) {
+        let mut func_name = func.name.value;
+        if self.functions.contains_key(&func_name) {
             return compiler_error(
                 func.name.pos,
-                format!("function `{}` is defined multiple times", func.name.value),
+                format!("function `{}` is defined multiple times", func_name),
             );
         }
         let old_variables = mem::replace(&mut self.variables, Self::new_var_map());
@@ -120,6 +123,7 @@ impl CodeGen {
         }
 
         // generate body
+        self.current_function = Some(func_name);
         let mut has_return = false;
         let void = func.return_type.value == "void";
         for stmt in func.statements {
@@ -150,17 +154,18 @@ impl CodeGen {
             }
             self.generate_statement(stmt)?;
         }
+        func_name = self.current_function.take().expect("no current function available");
         if !(has_return || void) {
             return compiler_error(
                 func.name.pos,
-                format!("function `{}` has no `return` statement", func.name.value),
+                format!("function `{}` has no `return` statement", func_name),
             );
         }
 
         self.exit_scope();
         let code = mem::replace(&mut self.code, old_code);
         self.variables = old_variables;
-        self.functions.insert(func.name.value, Function { void, arity, code });
+        self.functions.insert(func_name, Function { void, arity, code });
         Ok(())
     }
 
@@ -363,6 +368,11 @@ impl CodeGen {
         args: &[ast::Expr],
         expr: bool,
     ) -> CompilerResult<()> {
+        if let Some(current) = self.current_function.as_ref() {
+            if current == &name.value {
+                return compiler_error(name.pos, format!("recursive function `{}`", name.value));
+            }
+        }
         let func = match self.functions.get(&name.value) {
             Some(func) => func,
             None => {

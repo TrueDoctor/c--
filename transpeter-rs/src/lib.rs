@@ -30,15 +30,16 @@ pub fn compile(input: &str, name: &str, options: CompilerOptions) -> Option<Prog
         .and_then(|tokens| parse_program(tokens.into_iter(), name))
         .and_then(|ast| {
             if options.debug {
-                println!("\n[AST]");
+                println!("[AST]");
                 pretty_print_ast(&ast);
+                println!();
             }
 
             let std = if options.no_std {
                 None
             } else {
                 if options.debug {
-                    println!("Compiling std...");
+                    println!("Compiling std...\n");
                 }
                 Some(
                     compile(
@@ -57,15 +58,14 @@ pub fn compile(input: &str, name: &str, options: CompilerOptions) -> Option<Prog
         })
         .map(|program| {
             if options.debug {
-                println!("\n[Program]");
+                println!("[Program]");
                 println!("{:#?}", program);
             }
 
             program
         })
         .map_err(|err| {
-            eprintln!("\n[Error]");
-            eprintln!("{}", err);
+            eprintln!("[Error] {}", err);
         })
         .ok()?;
     if options.run {

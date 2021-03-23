@@ -1,0 +1,57 @@
+# /
+put_int(0 / 5);
+put_int(2 / 5);
+put_int(5 / 5);
+put_int(25 / 5);
+put_int(5 / 1);
+put_int(26 / 5);
+put_char('\n');
+
+# /=
+int a = 2;
+a /= 5;
+put_int(a);
+a /= 5;
+put_int(a);
+a = 25;
+a /= 5;
+put_int(a);
+a /= 5;
+put_int(a);
+a = 5;
+a /= 1;
+put_int(a);
+a = 26;
+a /= 5;
+put_int(a);
+put_char('\n');
+
+# %
+put_int(0 % 5);
+put_int(2 % 5);
+put_int(5 % 5);
+put_int(25 % 5);
+put_int(5 % 1);
+put_int(26 % 5);
+put_char('\n');
+
+# %=
+a -= 3;
+a %= 5;
+put_int(a);
+a = 0;
+a %= 5;
+put_int(a);
+a = 25;
+a %= 5;
+put_int(a);
+a = 5;
+a %= 5;
+put_int(a);
+a = 5;
+a %= 1;
+put_int(a);
+a = 26;
+a %= 5;
+put_int(a);
+put_char('\n');

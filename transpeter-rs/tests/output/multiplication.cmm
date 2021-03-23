@@ -1,0 +1,15 @@
+# *=
+int a = 2;
+a *= 4;
+put_int(a);
+put_char('\n');
+
+# *
+put_char(6 * 7);
+put_char(42 * 1);
+put_char(1 * 42);
+put_char('\n');
+
+put_int(0 * 1);
+put_int(1 * 0);
+put_char('\n');

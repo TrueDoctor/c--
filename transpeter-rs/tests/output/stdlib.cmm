@@ -1,0 +1,14 @@
+int char;
+
+put_char('h');
+put_char('a');
+put_char('l');
+put_char('l');
+put_char('o');
+put_char('\n');
+
+repeat(4) {
+    char = get_char();
+    put_char(char);
+}
+put_char('\n');

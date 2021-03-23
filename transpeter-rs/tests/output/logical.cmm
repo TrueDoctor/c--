@@ -1,0 +1,33 @@
+int a = 5 == 5;  # 1
+int b = 1 == 5;  # 0
+
+int c = 5 != 5;  # 0
+int d = 1 != 5;  # 1
+
+int e = 0 or 0;  # 0
+int f = 5 or 0;  # 1
+int g = 0 or 42;  # 1
+int h = 5 or 42;  # 1
+
+int i = 0 and 0;  # 0
+int j = 5 and 0;  # 0
+int k = 0 and 42;  # 0
+int l = 5 and 42;  # 1
+
+int m = not 0;  # 1
+int n = not 42;  # 0
+put_int(a);
+put_int(b);
+put_int(c);
+put_int(d);
+put_int(e);
+put_int(f);
+put_int(g);
+put_int(h);
+put_int(i);
+put_int(j);
+put_int(k);
+put_int(l);
+put_int(m);
+put_int(n);
+put_char('\n');

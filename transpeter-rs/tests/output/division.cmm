@@ -1,0 +1,11 @@
+# /=
+int a = 42;
+a /= 6;
+int b = a + 48;
+put_char(b);
+put_char(10);
+
+# /
+put_char(210 / 5);
+put_char(42 / 1);
+put_char(10);
