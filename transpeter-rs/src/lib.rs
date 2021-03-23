@@ -14,6 +14,7 @@ use parser::parse_program;
 const STD: &str = include_str!("../lib/std.cmm");
 
 /// Options passed to [`compile`].
+#[derive(Clone, Copy)]
 pub struct CompilerOptions {
     /// Print debug output.
     pub debug: bool,

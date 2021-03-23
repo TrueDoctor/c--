@@ -87,3 +87,25 @@ fn no_stdlib() {
         .is_none(),
     );
 }
+
+#[test]
+fn function_order() {
+    let options = CompilerOptions { debug: false, run: false, no_std: false };
+
+    const CYCLIC: &str = r#"
+    void foo() { bar(); }
+    void bar() { foo(); }
+    "#;
+    assert!(compile(CYCLIC, "", options).is_none());
+
+    const REVERSE: &str = r#"
+    void foo() { bar(); }
+    void bar() {}
+    "#;
+    assert!(compile(REVERSE, "", options).is_none());
+
+    const RECURSIVE: &str = r#"
+    int main() { return main(); }
+    "#;
+    assert!(compile(RECURSIVE, "", options).is_none());
+}
