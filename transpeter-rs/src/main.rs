@@ -43,6 +43,9 @@ fn main() -> io::Result<()> {
     let matches = App::new("transpeter")
         .version("0.1")
         .arg(Arg::with_name("input").help("The input file"))
+        .arg(Arg::with_name("output")
+            .requires("input")
+            .help("The output file"))
         .arg(Arg::with_name("optimize")
             .short("o")
             .long("optimize")
@@ -64,13 +67,17 @@ fn main() -> io::Result<()> {
     if let Some(path) = matches.value_of("input") {
         let program = fs::read_to_string(&path)?;
         let name = Path::file_stem(path.as_ref()).and_then(OsStr::to_str).unwrap();
+        let output = matches.value_of("output");
         let options = CompilerOptions {
             debug: matches.is_present("debug"),
             optimize: matches.is_present("optimize"),
             run: matches.is_present("run"),
             no_std: matches.is_present("no-std"),
         };
-        compile(&program, name, options);
+        let program = compile(&program, name, options);
+        if let (Some(output), Some(program)) = (output, program) {
+            fs::write(output, format!("[{}]\n{}", program.name, program.code))?;
+        }
     } else {
         repl(matches.is_present("optimize"))?;
     }
