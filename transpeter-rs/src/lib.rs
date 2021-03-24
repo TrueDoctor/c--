@@ -14,10 +14,12 @@ use parser::parse_program;
 const STD: &str = include_str!("../lib/std.cmm");
 
 /// Options passed to [`compile`].
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct CompilerOptions {
     /// Print debug output.
     pub debug: bool,
+    /// Optimize the generated code.
+    pub optimize: bool,
     /// Run the program.
     pub run: bool,
     /// Compile without the standard library.
@@ -46,15 +48,14 @@ pub fn compile(input: &str, name: &str, options: CompilerOptions) -> Option<Prog
                         STD,
                         "std",
                         CompilerOptions {
-                            debug: false,
-                            run: false,
                             no_std: true,
+                            ..CompilerOptions::default()
                         },
                     )
                     .unwrap(),
                 )
             };
-            generate_code(ast, std)
+            generate_code(ast, std, options.optimize)
         })
         .map(|program| {
             if options.debug {

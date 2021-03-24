@@ -2,12 +2,15 @@
 //!
 //! It assumes that the cells of the brainfuck implementation is unsigned.
 
+mod optimizations;
+
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::mem;
 
 use crate::ast;
 use crate::util::{compiler_error, CompilerResult};
+use optimizations::optimize_code;
 
 /// A compiled program.
 #[derive(Debug)]
@@ -154,7 +157,10 @@ impl CodeGen {
             }
             self.generate_statement(stmt)?;
         }
-        func_name = self.current_function.take().expect("no current function available");
+        func_name = self
+            .current_function
+            .take()
+            .expect("no current function available");
         if !(has_return || void) {
             return compiler_error(
                 func.name.pos,
@@ -197,7 +203,12 @@ impl CodeGen {
                 }
                 self.exit_scope();
             }
-            If { condition, then_statement, else_statement, .. } => match else_statement {
+            If {
+                condition,
+                then_statement,
+                else_statement,
+                ..
+            } => match else_statement {
                 Some(else_statement) => {
                     // "[-]+>{condition}[{statement}<->[-]]<[{else_statement}[-]]"
                     self.code.push_str("[-]+>");
@@ -407,7 +418,11 @@ impl CodeGen {
 }
 
 /// Generates a [`Program`] from an [`ast::Program`], while doing semantic analysis.
-pub fn generate_code(ast: ast::Program, std: Option<Program>) -> CompilerResult<Program> {
+pub fn generate_code(
+    ast: ast::Program,
+    std: Option<Program>,
+    optimize: bool,
+) -> CompilerResult<Program> {
     use ast::Item::*;
 
     let mut code_gen = CodeGen::new();
@@ -420,6 +435,14 @@ pub fn generate_code(ast: ast::Program, std: Option<Program>) -> CompilerResult<
             Statement(stmt) => code_gen.generate_statement(stmt)?,
         }
     }
+
+    if optimize {
+        for func in code_gen.functions.values_mut() {
+            optimize_code(&mut func.code);
+        }
+        optimize_code(&mut code_gen.code);
+    }
+
     Ok(Program {
         name: ast.name,
         functions: code_gen.functions,

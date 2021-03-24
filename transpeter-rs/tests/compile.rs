@@ -41,9 +41,8 @@ fn example() {
             EXAMPLE,
             "example",
             CompilerOptions {
-                debug: false,
                 run: true,
-                no_std: false,
+                ..CompilerOptions::default()
             },
         )
         .is_some(),
@@ -62,11 +61,7 @@ fn stdlib() {
         compile(
             STDLIB,
             "stdlib_test",
-            CompilerOptions {
-                debug: false,
-                run: false,
-                no_std: false,
-            },
+            CompilerOptions::default(),
         )
         .is_some(),
     );
@@ -79,9 +74,8 @@ fn no_stdlib() {
             STDLIB,
             "no_stdlib_test",
             CompilerOptions {
-                debug: false,
-                run: false,
                 no_std: true,
+                ..CompilerOptions::default()
             },
         )
         .is_none(),
@@ -90,7 +84,7 @@ fn no_stdlib() {
 
 #[test]
 fn function_order() {
-    let options = CompilerOptions { debug: false, run: false, no_std: false };
+    let options = CompilerOptions::default();
 
     const CYCLIC: &str = r#"
     void foo() { bar(); }

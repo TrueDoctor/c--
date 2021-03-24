@@ -98,6 +98,21 @@ pub fn run(program: &str) {
     }
 }
 
+pub fn is_valid(program: &str) -> bool {
+    let mut loop_depth = 0usize;
+    for c in program.chars() {
+        if c == '[' {
+            loop_depth += 1;
+        } else if c == ']' {
+            if loop_depth == 0 {
+                return false;
+            }
+            loop_depth -= 1;
+        }
+    }
+    loop_depth == 0
+}
+
 #[cfg(test)]
 mod tests {
     use super::run;
