@@ -72,12 +72,16 @@ impl CodeGen {
         self.code.push('>');
     }
 
-    fn lookup_var(&mut self, name: &str) -> Option<usize> {
-        self.variables
+    fn lookup_var(&mut self, name: &ast::Ident) -> CompilerResult<usize> {
+        let var = self.variables
             .iter()
             .rev()
-            .find_map(|scope| scope.get(name))
-            .copied()
+            .find_map(|scope| scope.get(&name.value))
+            .copied();
+        match var {
+            Some(addr) => Ok(self.stack_ptr - addr),
+            None => compiler_error(name.pos, format!("undeclared variable `{}`", name.value)),
+        }
     }
 
     fn enter_scope(&mut self) {
@@ -254,15 +258,7 @@ impl CodeGen {
             Assign { name, op, expr } => {
                 use ast::AssignOpKind::*;
 
-                let rel_addr = match self.lookup_var(&name.value) {
-                    Some(addr) => self.stack_ptr - addr,
-                    None => {
-                        return compiler_error(
-                            name.pos,
-                            format!("undeclared variable `{}`", name.value),
-                        )
-                    }
-                };
+                let rel_addr = self.lookup_var(&name)?;
                 let left = "<".repeat(rel_addr);
                 let right = ">".repeat(rel_addr);
                 self.generate_expr(&expr)?;
@@ -345,16 +341,18 @@ impl CodeGen {
                 }
             }
             Call { name, args } => self.generate_call(name, &args, true)?,
+            Move { name } => {
+                let rel_addr = self.lookup_var(&name)?;
+                write!(
+                    self.code,
+                    "[-]{left}[-{right}+{left}]{right}",
+                    left = "<".repeat(rel_addr),
+                    right = ">".repeat(rel_addr),
+                )
+                .unwrap();
+            }
             Var { name } => {
-                let rel_addr = match self.lookup_var(&name.value) {
-                    Some(addr) => self.stack_ptr - addr,
-                    None => {
-                        return compiler_error(
-                            name.pos,
-                            format!("undeclared variable `{}`", name.value),
-                        )
-                    }
-                };
+                let rel_addr = self.lookup_var(&name)?;
                 write!(
                     self.code,
                     "[-]>[-]<{left}[-{right}+>+<{left}]{right}>[-<{left}+{right}>]<",

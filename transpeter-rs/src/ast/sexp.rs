@@ -38,6 +38,7 @@ impl Sexp {
             Expr::Call { name, args } => {
                 Self::List(name.value, args.into_iter().map(Self::from_expr).collect())
             }
+            Expr::Move { name } => Self::List("move".to_string(), vec![Self::Atom(name.value)]),
             Expr::Var { name } => Self::Atom(name.value),
             Expr::Int { value, .. } => Self::Atom(format!("{}", value)),
         }

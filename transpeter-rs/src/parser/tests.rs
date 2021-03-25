@@ -313,6 +313,7 @@ fn expression() {
 
     // variables
     assert_eq!(parse_sexp("a"), "a");
+    assert_eq!(parse_sexp("move a"), "(move a)");
 
     // integer literals
     assert_eq!(parse_sexp("0"), "0");

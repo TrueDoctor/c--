@@ -122,6 +122,9 @@ pub enum Expr {
         name: Ident,
         args: Vec<Expr>,
     },
+    Move {
+        name: Ident,
+    },
     Var {
         name: Ident,
     },

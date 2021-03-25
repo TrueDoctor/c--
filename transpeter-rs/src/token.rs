@@ -41,6 +41,8 @@ pub enum TokenKind {
     True,
     /// `false`
     False,
+    /// `move`
+    Move,
 
     // separators
     /// `(`
@@ -130,6 +132,7 @@ impl fmt::Display for TokenKind {
             TokenKind::Not => write!(f, "keyword `not`"),
             TokenKind::True => write!(f, "keyword `true`"),
             TokenKind::False => write!(f, "keyword `false`"),
+            TokenKind::Move => write!(f, "keyword `move`"),
             TokenKind::LeftParen => write!(f, "`(`"),
             TokenKind::RightParen => write!(f, "`)`"),
             TokenKind::LeftBrace => write!(f, "`{{`"),

@@ -184,6 +184,7 @@ impl<'a> Lexer<'a> {
                         "not" => TokenKind::Not,
                         "true" => TokenKind::True,
                         "false" => TokenKind::False,
+                        "move" => TokenKind::Move,
                         _ => TokenKind::Identifier(ident.to_string()),
                     };
                     return self.token(tt);

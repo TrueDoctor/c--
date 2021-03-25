@@ -136,6 +136,7 @@ fn keyword() {
     assert_eq!(tokenize("not").unwrap(), [Not]);
     assert_eq!(tokenize("true").unwrap(), [True]);
     assert_eq!(tokenize("false").unwrap(), [False]);
+    assert_eq!(tokenize("move").unwrap(), [Move]);
 }
 
 #[test]
@@ -250,4 +251,6 @@ fn separator_operator() {
     assert_eq!(tokenize("<").unwrap(), [Less]);
     assert_eq!(tokenize("<=").unwrap(), [LessEq]);
     assert_eq!(tokenize("!=").unwrap(), [NotEq]);
+
+    assert!(tokenize("!").is_err());
 }

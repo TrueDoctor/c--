@@ -147,6 +147,9 @@ pub fn pretty_print_ast(program: &Program) {
                     pretty_print_expr(arg, &new_prefix);
                 }
             }
+            Move { name } => {
+                println!("{}Move {}", prefix, name.value);
+            }
             Var { name } => {
                 println!("{}Var {}", prefix, name.value);
             }

@@ -336,6 +336,10 @@ impl<I: Iterator<Item = Token>> Parser<I> {
         let token = self.next();
         let pos = token.pos;
         Ok(match token.kind {
+            TokenKind::Move => {
+                let name = self.expect_identifier()?;
+                Expr::Move { name }
+            }
             TokenKind::Identifier(value) => {
                 let name = Ident { pos, value };
                 if self.optional(&TokenKind::LeftParen) {

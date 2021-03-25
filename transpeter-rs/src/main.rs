@@ -41,7 +41,7 @@ fn main() -> io::Result<()> {
 
     // CLI
     let matches = App::new("transpeter")
-        .version("0.1")
+        .version("0.2")
         .arg(Arg::with_name("input").help("The input file"))
         .arg(Arg::with_name("output")
             .requires("input")
