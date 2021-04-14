@@ -16,8 +16,6 @@ pub struct Program {
 #[derive(Debug)]
 pub enum Item {
     Function(ItemFunction),
-    // ItemConst {},
-    // ItemStruct {},
     Statement(Statement),
 }
 

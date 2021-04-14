@@ -49,6 +49,7 @@ fn identifier() {
 
     test_identifier("origin");
     test_identifier("note");
+    test_identifier("no");
     test_identifier("intel");
 
     test_identifier("a");

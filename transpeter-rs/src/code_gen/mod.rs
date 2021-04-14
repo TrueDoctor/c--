@@ -57,7 +57,6 @@ impl CodeGen {
 
     fn declared(&self, var: &str) -> bool {
         self.variables
-            .iter()
             .last()
             .map(|scope| scope.contains_key(var))
             .expect("no scope available")
